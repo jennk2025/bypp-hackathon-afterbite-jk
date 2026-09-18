@@ -1,7 +1,7 @@
 // Vercel 서버리스 함수 (Node.js 런타임)로 배포됩니다.
 // Gemini API 키는 여기(서버 쪽 환경변수)에만 존재하며 브라우저로 절대 전달되지 않습니다.
 
-const CANDIDATE_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+const CANDIDATE_MODELS = ['gemini-2.5-flash', 'gemini-1.5-flash'];
 
 const PLACE_LABEL: Record<string, string> = {
   narrow_indoor: '좁은 실내(방 한 칸 정도)',
