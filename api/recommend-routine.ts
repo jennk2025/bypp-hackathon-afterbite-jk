@@ -44,10 +44,13 @@ export interface ApiResult {
   body: Record<string, unknown>;
 }
 
-export async function runRecommendRoutine(rawBody: any): Promise<ApiResult> {
+export async function runRecommendRoutine(rawBody: unknown): Promise<ApiResult> {
+  // 💡 Vercel 환경변수에서 API 키를 가져옵니다.
   const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  
   if (!apiKey) {
-    return { status: 500, body: { error: 'API 키가 설정되지 않았습니다.' } };
+    console.error('API Key is missing in Vercel Environment Variables');
+    return { status: 500, body: { error: '서버에 API 키가 설정되지 않았습니다.' } };
   }
 
   let body: any = rawBody;
@@ -59,12 +62,12 @@ export async function runRecommendRoutine(rawBody: any): Promise<ApiResult> {
     }
   }
 
-  // 💡 수정 1: 프론트엔드에서 넘어오는 값이 문자열일 경우를 대비해 Number()로 강제 형변환
+  // 데이터 안전하게 추출 및 형변환
   const minutes = Number(body?.minutes);
-  const place = body?.place;
-  const intensity = body?.intensity;
+  const place = String(body?.place || '');
+  const intensity = String(body?.intensity || '');
   
-  if (isNaN(minutes) || typeof place !== 'string' || typeof intensity !== 'string') {
+  if (isNaN(minutes) || !body?.place || !body?.intensity) {
     return { status: 400, body: { error: 'minutes, place, intensity 값이 올바르지 않습니다.' } };
   }
 
@@ -77,7 +80,6 @@ export async function runRecommendRoutine(rawBody: any): Promise<ApiResult> {
     totalCalories: Number(body?.totalCalories) || 0,
   });
 
-  // 💡 수정 2: Gemini 1.5가 무조건 올바른 형식의 JSON만 응답하도록 스키마(Schema) 정의
   const requestPayload = {
     contents: [{ parts: [{ text: promptText }] }],
     generationConfig: { 
@@ -129,12 +131,10 @@ export async function runRecommendRoutine(rawBody: any): Promise<ApiResult> {
       
       if (!text) continue;
 
-      // 💡 수정 3: 마크다운 제거 로직 강화 (문서 중간에 있어도 제거되도록 변경)
       text = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-
       const parsed = JSON.parse(text);
-      const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.routines) ? parsed.routines : null;
       
+      const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.routines) ? parsed.routines : null;
       if (!list) throw new Error("배열 형태의 JSON이 아닙니다.");
 
       const routines = list
@@ -165,10 +165,21 @@ export async function runRecommendRoutine(rawBody: any): Promise<ApiResult> {
   };
 }
 
+// 💡 Vercel API 라우트 핸들러 (타입 에러 방지를 위해 명시적 처리)
 export default async function handler(req: any, res: any) {
+  // CORS 처리 (선택 사항이나 프론트엔드 연동 시 유용함)
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
   const result = await runRecommendRoutine(req.body);
   return res.status(result.status).json(result.body);
 }
