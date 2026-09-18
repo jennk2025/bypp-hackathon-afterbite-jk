@@ -1,0 +1,48 @@
+import type { SnackDbEntry } from '../types';
+
+/**
+ * 참고용 근사치 데이터입니다. 실제 제품 패키지를 스캔해 검증한 값이 아니므로
+ * 사용자가 반드시 실제 포장지 정보와 비교·수정해야 합니다.
+ */
+export const SNACK_DB: SnackDbEntry[] = [
+  { name: '새우깡', servingSizeLabel: '1봉지(90g)', caloriesPerServing: 458, category: '짭짤한 과자' },
+  { name: '포카칩 오리지널', servingSizeLabel: '1봉지(66g)', caloriesPerServing: 339, category: '짭짤한 과자' },
+  { name: '오징어땅콩', servingSizeLabel: '1봉지(98g)', caloriesPerServing: 453, category: '짭짤한 과자' },
+  { name: '자갈치', servingSizeLabel: '1봉지(84g)', caloriesPerServing: 386, category: '짭짤한 과자' },
+  { name: '꼬깔콘 고소한맛', servingSizeLabel: '1봉지(72g)', caloriesPerServing: 355, category: '짭짤한 과자' },
+  { name: '허니버터칩', servingSizeLabel: '1봉지(60g)', caloriesPerServing: 324, category: '짭짤한 과자' },
+  { name: '노브랜드 감자칩', servingSizeLabel: '1봉지(85g)', caloriesPerServing: 430, category: '짭짤한 과자' },
+  { name: '수미칩 오리지널', servingSizeLabel: '1봉지(85g)', caloriesPerServing: 440, category: '짭짤한 과자' },
+  { name: '프링글스 오리지널', servingSizeLabel: '1통(110g)', caloriesPerServing: 594, category: '짭짤한 과자' },
+  { name: '나쵸 치즈맛', servingSizeLabel: '1봉지(83g)', caloriesPerServing: 410, category: '짭짤한 과자' },
+  { name: '초코파이', servingSizeLabel: '1개(39g)', caloriesPerServing: 165, category: '초콜릿/파이' },
+  { name: '몽쉘', servingSizeLabel: '1개(28g)', caloriesPerServing: 138, category: '초콜릿/파이' },
+  { name: '빼빼로 오리지널', servingSizeLabel: '1박스(46g)', caloriesPerServing: 218, category: '초콜릿/과자' },
+  { name: '홈런볼', servingSizeLabel: '1박스(84g)', caloriesPerServing: 434, category: '초콜릿/과자' },
+  { name: '카스타드', servingSizeLabel: '1개(30g)', caloriesPerServing: 115, category: '초콜릿/파이' },
+  { name: '오레오 오리지널', servingSizeLabel: '1봉지(6개, 51g)', caloriesPerServing: 246, category: '비스킷' },
+  { name: '에이스', servingSizeLabel: '1봉지(90g)', caloriesPerServing: 450, category: '비스킷' },
+  { name: '초코칩쿠키', servingSizeLabel: '1봉지(80g)', caloriesPerServing: 400, category: '비스킷' },
+  { name: '초코송이', servingSizeLabel: '1봉지(50g)', caloriesPerServing: 270, category: '초콜릿/과자' },
+  { name: '새콤달콤', servingSizeLabel: '1봉지(120g)', caloriesPerServing: 456, category: '젤리/사탕' },
+  { name: '마이쮸', servingSizeLabel: '1봉지(10개, 82g)', caloriesPerServing: 300, category: '젤리/사탕' },
+  { name: '하리보 골드베어', servingSizeLabel: '1봉지(100g)', caloriesPerServing: 350, category: '젤리/사탕' },
+  { name: '월드콘', servingSizeLabel: '1개(160ml)', caloriesPerServing: 265, category: '아이스크림' },
+  { name: '설레임', servingSizeLabel: '1개(140ml)', caloriesPerServing: 148, category: '아이스크림' },
+  { name: '메로나', servingSizeLabel: '1개(80ml)', caloriesPerServing: 138, category: '아이스크림' },
+  { name: '스크류바', servingSizeLabel: '1개(70ml)', caloriesPerServing: 99, category: '아이스크림' },
+  { name: '붕어싸만코', servingSizeLabel: '1개(160ml)', caloriesPerServing: 262, category: '아이스크림' },
+  { name: '투게더', servingSizeLabel: '1컵(100ml)', caloriesPerServing: 200, category: '아이스크림' },
+  { name: '코카콜라', servingSizeLabel: '1캔(250ml)', caloriesPerServing: 108, category: '음료' },
+  { name: '사이다', servingSizeLabel: '1캔(250ml)', caloriesPerServing: 100, category: '음료' },
+  { name: '박카스', servingSizeLabel: '1병(120ml)', caloriesPerServing: 80, category: '음료' },
+  { name: '바나나우유', servingSizeLabel: '1개(240ml)', caloriesPerServing: 190, category: '음료' },
+  { name: '초코우유', servingSizeLabel: '1개(240ml)', caloriesPerServing: 210, category: '음료' },
+  { name: '카페라떼(캔)', servingSizeLabel: '1캔(240ml)', caloriesPerServing: 150, category: '음료' },
+  { name: '자유시간', servingSizeLabel: '1개(35g)', caloriesPerServing: 187, category: '초콜릿/과자' },
+  { name: '초코비', servingSizeLabel: '1봉지(50g)', caloriesPerServing: 250, category: '초콜릿/과자' },
+  { name: '쌀과자(맛동산)', servingSizeLabel: '1봉지(76g)', caloriesPerServing: 380, category: '짭짤한 과자' },
+  { name: '쥐포', servingSizeLabel: '1봉지(30g)', caloriesPerServing: 95, category: '기타 간식' },
+  { name: '육포', servingSizeLabel: '1봉지(50g)', caloriesPerServing: 160, category: '기타 간식' },
+  { name: '컵라면(육개장)', servingSizeLabel: '1개(86g)', caloriesPerServing: 380, category: '기타 간식' },
+];
