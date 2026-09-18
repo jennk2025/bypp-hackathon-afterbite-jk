@@ -3,11 +3,9 @@ import { HelpModal } from './HelpModal';
 
 interface AppHeaderProps {
   onLogoClick?: () => void;
-  onSnacksClick?: () => void;
-  onWorkoutsClick?: () => void;
 }
 
-export function AppHeader({ onLogoClick, onSnacksClick, onWorkoutsClick }: AppHeaderProps) {
+export function AppHeader({ onLogoClick }: AppHeaderProps) {
   const [showHelp, setShowHelp] = useState(false);
 
   return (
@@ -28,32 +26,19 @@ export function AppHeader({ onLogoClick, onSnacksClick, onWorkoutsClick }: AppHe
           </span>
         </button>
 
-        <nav className="flex flex-1 items-center justify-center gap-1.5 overflow-x-auto sm:gap-2">
-          <button
-            type="button"
-            onClick={onSnacksClick}
-            disabled={!onSnacksClick}
-            className="flex shrink-0 items-center gap-1 rounded-full border border-navy/10 bg-ivory-card/80 px-2.5 py-1.5 text-[11px] font-semibold text-navy-soft transition-colors hover:border-teal/40 hover:text-teal disabled:pointer-events-none disabled:opacity-40 lg:px-3.5 lg:py-2 lg:text-xs"
-          >
-            <span aria-hidden="true">🍪</span>
-            <span>오늘 먹은 간식</span>
-          </button>
-          <button
-            type="button"
-            onClick={onWorkoutsClick}
-            disabled={!onWorkoutsClick}
-            className="flex shrink-0 items-center gap-1 rounded-full border border-navy/10 bg-ivory-card/80 px-2.5 py-1.5 text-[11px] font-semibold text-navy-soft transition-colors hover:border-teal/40 hover:text-teal disabled:pointer-events-none disabled:opacity-40 lg:px-3.5 lg:py-2 lg:text-xs"
-          >
-            <span aria-hidden="true">🏃</span>
-            <span>오늘의 운동</span>
-          </button>
-        </nav>
+        {/* 홍보 문구 — 클릭 안 되는 순수 장식용 카피 */}
+        <p className="hidden flex-1 items-center justify-center gap-1.5 text-center text-[11px] font-semibold tracking-wide text-navy-soft sm:flex lg:text-xs">
+          <span aria-hidden="true">🍪</span>
+          오늘 먹은 간식,
+          <span aria-hidden="true">🏃</span>
+          오늘의 운동으로 가볍게
+        </p>
 
         <button
           type="button"
           onClick={() => setShowHelp(true)}
           aria-label="이 화면 설명 보기"
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-navy/15 text-[11px] font-bold text-navy-soft transition-colors hover:bg-navy/5 lg:h-8 lg:w-8 lg:text-sm"
+          className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-navy/15 text-[11px] font-bold text-navy-soft transition-colors hover:bg-navy/5 lg:h-8 lg:w-8 lg:text-sm"
         >
           ?
         </button>

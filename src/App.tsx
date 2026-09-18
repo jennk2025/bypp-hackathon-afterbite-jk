@@ -45,20 +45,6 @@ export default function App() {
     });
   }
 
-  // 헤더의 "오늘 먹은 간식" 바로가기 — 홈 화면의 간식 트레이 섹션으로 스크롤합니다.
-  function goToSnacks() {
-    setScreen('tray');
-    requestAnimationFrame(() => {
-      document.getElementById('tray-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  }
-
-  // 헤더의 "오늘의 운동" 바로가기 — 완료한 움직임 기록을 바로 띄웁니다.
-  function goToWorkouts() {
-    setScreen('tray');
-    setModal({ type: 'completedWorkouts' });
-  }
-
   const { currentEnergyKcal, fillPercent } = useEnergyGauge(state.snacks, state.completedWorkouts);
 
   const tray = useSnackTray(setState, state.snacks);
@@ -82,7 +68,7 @@ export default function App() {
         <div className="bg-decor" aria-hidden="true" />
         <div className="bg-decor-spot" aria-hidden="true" />
         <BackgroundSparkles />
-        <AppHeader onLogoClick={goHome} onSnacksClick={goToSnacks} onWorkoutsClick={goToWorkouts} />
+        <AppHeader onLogoClick={goHome} />
         <div className="pt-14 lg:pt-16">
           <MoveConditionForm
             totalCalories={tray.selectedTotalCalories}
@@ -101,7 +87,7 @@ export default function App() {
         <div className="bg-decor" aria-hidden="true" />
         <div className="bg-decor-spot" aria-hidden="true" />
         <BackgroundSparkles />
-        <AppHeader onLogoClick={goHome} onSnacksClick={goToSnacks} onWorkoutsClick={goToWorkouts} />
+        <AppHeader onLogoClick={goHome} />
         <div className="pt-14 lg:pt-16">
           <RoutineSuggestions
             routines={workout.routines}
@@ -124,7 +110,7 @@ export default function App() {
         <div className="bg-decor" aria-hidden="true" />
         <div className="bg-decor-spot" aria-hidden="true" />
         <BackgroundSparkles />
-        <AppHeader onLogoClick={goHome} onSnacksClick={goToSnacks} onWorkoutsClick={goToWorkouts} />
+        <AppHeader onLogoClick={goHome} />
         <div className="pt-14 lg:pt-16">
           <WorkoutTimer
             routine={inProgress.routine}
@@ -145,7 +131,7 @@ export default function App() {
       <div className="bg-decor" aria-hidden="true" />
       <div className="bg-decor-spot" aria-hidden="true" />
       <BackgroundSparkles />
-      <AppHeader onLogoClick={goHome} onSnacksClick={goToSnacks} onWorkoutsClick={goToWorkouts} />
+      <AppHeader onLogoClick={goHome} />
 
       {/* 좁은 화면(폰)에서는 그냥 위→아래(타이틀→캐릭터→균형막대→트레이) 문서 순서 그대로
           쌓이고, 넓은 화면(lg+)에서만 home-grid가 4개 영역(title/gauge/char/tray)으로 재배치합니다.
@@ -180,7 +166,7 @@ export default function App() {
           <BalanceScale percent={fillPercent} />
         </div>
 
-        <div id="tray-section" className="home-grid-tray scroll-mt-20 mt-8 lg:mt-0">
+        <div className="home-grid-tray mt-8 lg:mt-0">
           {inProgress && (
             <div className="flex items-center justify-between gap-3 rounded-2xl border border-lavender bg-lavender-soft px-4 py-3.5 lg:px-5 lg:py-4">
               <div>
