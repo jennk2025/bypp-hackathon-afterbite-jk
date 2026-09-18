@@ -1,8 +1,9 @@
 // Vercel 서버리스 함수 (Node.js 런타임)
-// gemini-1.5-flash 계열은 이미 서비스 종료되어 전부 404를 반환합니다.
-// gemini-flash-latest는 Google이 최신 안정 Flash 모델로 계속 갈아끼워주는 alias라
-// 특정 버전을 못박아둘 때처럼 또 조용히 끊기는 일을 막아줍니다.
-const CANDIDATE_MODELS = ['gemini-flash-latest', 'gemini-2.5-flash'];
+// gemini-1.5-flash, gemini-2.5-flash 계열은 이 API 키(신규 사용자)로는 이제
+// "no longer available to new users" 404를 반환합니다. gemini-3.6-flash가 현재
+// 실제로 응답하는 모델이고, gemini-flash-latest는 Google이 계속 최신 안정 버전으로
+// 갈아끼워주는 alias라 다음 세대 전환 때도 fallback으로 살아있을 가능성이 높습니다.
+const CANDIDATE_MODELS = ['gemini-3.6-flash', 'gemini-flash-latest'];
 
 const PLACE_LABEL: Record<string, string> = {
   narrow_indoor: '좁은 실내(방 한 칸 정도)',
@@ -49,7 +50,7 @@ export interface ApiResult {
 
 export async function runRecommendRoutine(rawBody: unknown): Promise<ApiResult> {
   // 💡 Vercel 환경변수에서 API 키를 가져옵니다.
-  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  const apiKey = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY)?.trim();
   
   if (!apiKey) {
     console.error('API Key is missing in Vercel Environment Variables');

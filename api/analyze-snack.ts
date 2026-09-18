@@ -1,10 +1,11 @@
 // Vercel 서버리스 함수 (Node.js 런타임)로 배포됩니다.
 // Gemini API 키는 여기(서버 쪽 환경변수)에만 존재하며 브라우저로 절대 전달되지 않습니다.
 
-// gemini-1.5-flash 계열은 이미 서비스 종료되어 전부 404를 반환합니다.
-// gemini-flash-latest는 Google이 최신 안정 Flash 모델로 계속 갈아끼워주는 alias라
-// 특정 버전을 못박아둘 때처럼 또 조용히 끊기는 일을 막아줍니다.
-const CANDIDATE_MODELS = ['gemini-flash-latest', 'gemini-2.5-flash'];
+// gemini-1.5-flash, gemini-2.5-flash 계열은 이 API 키(신규 사용자)로는 이제
+// "no longer available to new users" 404를 반환합니다. gemini-3.6-flash가 현재
+// 실제로 응답하는 모델이고, gemini-flash-latest는 Google이 계속 최신 안정 버전으로
+// 갈아끼워주는 alias라 다음 세대 전환 때도 fallback으로 살아있을 가능성이 높습니다.
+const CANDIDATE_MODELS = ['gemini-3.6-flash', 'gemini-flash-latest'];
 
 const PROMPT = `이 사진은 과자, 음료, 빵, 아이스크림 등 간식의 포장지(앞면) 또는 영양정보 표(뒷면)입니다.
 사진을 꼼꼼히 분석하여 아래 JSON 형식으로만 응답하세요. 마크다운 코드블록이나 다른 부연 설명 없이 오직 순수 JSON만 반환하세요:
@@ -26,7 +27,7 @@ export interface ApiResult {
 }
 
 export async function runAnalyzeSnack(rawBody: any): Promise<ApiResult> {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  const apiKey = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY)?.trim();
   if (!apiKey) {
     console.error('[analyze-snack] GEMINI_API_KEY is missing from environment variables');
     return { status: 500, body: { error: 'Server not configured (API key missing)' } };
