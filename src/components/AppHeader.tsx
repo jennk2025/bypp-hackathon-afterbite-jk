@@ -26,11 +26,15 @@ export function AppHeader({ onLogoClick }: AppHeaderProps) {
           </span>
         </button>
 
+        <p className="font-brand hidden flex-1 text-center text-sm text-teal sm:block lg:text-base">
+          오늘 먹은 간식, 오늘의 운동으로 가볍게
+        </p>
+
         <button
           type="button"
           onClick={() => setShowHelp(true)}
           aria-label="이 화면 설명 보기"
-          className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-navy/15 text-[11px] font-bold text-navy-soft transition-colors hover:bg-navy/5 lg:h-8 lg:w-8 lg:text-sm"
+          className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-navy/15 text-[11px] font-bold text-navy-soft transition-colors hover:bg-navy/5 sm:ml-0 lg:h-8 lg:w-8 lg:text-sm"
         >
           ?
         </button>
