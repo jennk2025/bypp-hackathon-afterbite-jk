@@ -17,13 +17,20 @@ export function BalanceScale({ percent }: BalanceScaleProps) {
   const copy = STAGE_COPY[stage];
 
   return (
-    <section className="mt-6 rounded-[22px] border border-navy/10 bg-ivory-card px-5 py-4 shadow-sm">
-      <p className="mb-2.5 text-center text-[11px] font-bold tracking-wide" style={{ color: ZONE_COLOR[stage] }}>
+    <section className="mt-6 rounded-[22px] border border-navy/10 bg-ivory-card px-5 py-4 shadow-sm lg:mt-0 lg:rounded-[28px] lg:px-7 lg:py-6">
+      <p
+        className="mb-2.5 text-center text-[11px] font-bold tracking-wide lg:mb-4 lg:text-sm"
+        style={{ color: ZONE_COLOR[stage] }}
+      >
         <span aria-hidden="true">{copy.emoji}</span> {copy.label} ({STAGE_KCAL_RANGE[stage]})
       </p>
       <div className="balance-track">
-        <div className="balance-marker" style={{ left: `calc(${clamped}% - 7px)` }} aria-hidden="true">
-          <svg width="14" height="14" viewBox="0 0 14 14">
+        <div
+          className="balance-marker"
+          style={{ left: `calc(${clamped}% - var(--marker-offset, 7px))` }}
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 14 14">
             <path d="M7 14 0 4a7 7 0 0 1 14 0z" fill="#FBBF24" />
           </svg>
         </div>
@@ -42,7 +49,7 @@ export function BalanceScale({ percent }: BalanceScaleProps) {
           />
         </div>
         {/* 구간 기준을 막대 아래에 kcal로 작게 표시 — 색 폭과 같은 비율로 정렬됩니다 */}
-        <div className="mt-1.5 flex text-[9.5px] font-semibold text-navy-soft/80">
+        <div className="mt-1.5 flex text-[9.5px] font-semibold text-navy-soft/80 lg:mt-2 lg:text-xs">
           <span className="text-left" style={{ flexGrow: 34 }}>
             {STAGE_KCAL_RANGE.light}
           </span>
@@ -54,7 +61,7 @@ export function BalanceScale({ percent }: BalanceScaleProps) {
           </span>
         </div>
       </div>
-      <div className="mt-2.5 flex items-center justify-between text-[11.5px] font-bold">
+      <div className="mt-2.5 flex items-center justify-between text-[11.5px] font-bold lg:mt-4 lg:text-sm">
         <span className="flex items-center gap-1 text-[#16A34A]">
           <span aria-hidden="true">🌱</span> 0kcal · 완전 건강!
         </span>

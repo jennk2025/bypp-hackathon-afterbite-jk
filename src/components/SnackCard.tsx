@@ -42,8 +42,8 @@ export function SnackCard({ snack, selected, selectable, onToggleSelect, onEdit,
 
   return (
     <div
-      className={`relative rounded-2xl border bg-ivory-card px-4 py-3.5 shadow-sm transition-all duration-300 ${
-        selected ? 'border-teal ring-2 ring-teal/30' : 'border-navy/10'
+      className={`relative rounded-2xl border bg-ivory-card px-4 py-3.5 shadow-sm transition-all duration-300 lg:hover:-translate-y-0.5 lg:hover:shadow-md ${
+        selected ? 'border-teal ring-2 ring-teal/30' : 'border-navy/10 lg:hover:border-teal/40'
       }`}
     >
       <div className="flex items-start gap-3">

@@ -48,6 +48,9 @@ export interface MoveConditions {
   intensity: Intensity;
   noiseOk: boolean;
   jumpOk: boolean;
+  // AI 루틴 추천에게 전달할 자유 서술형 추가 요청. 규칙 기반 폴백(generateRoutines)은
+  // 이 값을 활용하지 않습니다 — 자유 텍스트를 해석할 수 없기 때문입니다.
+  extraRequest?: string;
 }
 
 export interface InProgressWorkout {

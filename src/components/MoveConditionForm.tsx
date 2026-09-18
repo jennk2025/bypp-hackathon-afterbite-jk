@@ -62,6 +62,7 @@ export function MoveConditionForm({ totalCalories, snackCount, onBack, onSubmit 
   const [intensity, setIntensity] = useState<Intensity>('mid');
   const [noiseOk, setNoiseOk] = useState(true);
   const [jumpOk, setJumpOk] = useState(true);
+  const [extraRequest, setExtraRequest] = useState('');
 
   const parsedCustomMinutes = parseInt(customMinutes, 10);
   // 직접 입력이 비어있거나 0 이하이면 임의로 1분 취급하지 않고 0으로 두어 제출 버튼이
@@ -191,12 +192,35 @@ export function MoveConditionForm({ totalCalories, snackCount, onBack, onSubmit 
             </button>
           </div>
         </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold text-navy-soft">
+            AI에게 추가로 요청하고 싶은 게 있나요? <span className="font-normal text-navy-soft/70">(선택)</span>
+          </p>
+          <textarea
+            value={extraRequest}
+            onChange={(e) => setExtraRequest(e.target.value.slice(0, 200))}
+            rows={3}
+            placeholder="예: 무릎이 안 좋아서 점프 동작은 최대한 피해주세요 / 허리 위주로 풀어주세요"
+            className="w-full resize-none rounded-2xl border border-navy/15 bg-ivory-card px-3.5 py-3 text-sm text-charcoal outline-none focus:border-teal"
+          />
+          <p className="mt-1 text-right text-[10px] text-navy-soft/70">{extraRequest.length}/200</p>
+        </div>
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md px-5 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] pt-3 sm:max-w-xl lg:max-w-2xl">
         <button
           type="button"
-          onClick={() => onSubmit({ minutes: effectiveMinutes, place, intensity, noiseOk, jumpOk })}
+          onClick={() =>
+            onSubmit({
+              minutes: effectiveMinutes,
+              place,
+              intensity,
+              noiseOk,
+              jumpOk,
+              extraRequest: extraRequest.trim() || undefined,
+            })
+          }
           disabled={useCustomMinutes && effectiveMinutes < 1}
           className="btn-primary w-full rounded-2xl py-3.5 text-sm font-semibold text-white transition-transform active:scale-[0.98] disabled:opacity-40"
         >

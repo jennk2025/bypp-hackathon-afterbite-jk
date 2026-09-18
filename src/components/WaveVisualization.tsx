@@ -22,11 +22,21 @@ interface FillTheme {
   mouthPath: string;
 }
 
-// 웃는 입(가벼움) → 살짝 무표정(쌓이는 중) → 처진 입(많이 쌓임)
+// 웃는 입(가벼움) → 완전 무표정(쌓이는 중) → 처진 입(많이 쌓임)
 const MOUTH_PATH: Record<Stage, string> = {
   light: 'M84,123 Q100,148 116,123',
-  rising: 'M89,130 Q100,133 111,130',
+  rising: 'M89,130 L111,130',
   heavy: 'M87,133 Q100,121 113,133',
+};
+
+// 균형 막대(BalanceScale)의 초록/주황/빨강 구간과 정확히 같은 색을 씁니다 — 캐릭터 색이
+// 구간마다 뚜렷하게 갈려야 "지금 주황 구간이구나"가 한눈에 보입니다. 예전에는 0~100%를
+// 하나의 연속된 무지개색으로 보간해서 주황 구간 초반엔 노란빛, 후반엔 붉은빛이 섞여
+// 뚜렷한 주황으로 안 보였습니다.
+const STAGE_COLORS: Record<Stage, { from: string; to: string; ripple: string; rgb: string }> = {
+  light: { from: '#4ADE80', to: '#22C55E', ripple: '#BBF7D0', rgb: '74,222,128' },
+  rising: { from: '#FB923C', to: '#EA580C', ripple: '#FED7AA', rgb: '251,146,60' },
+  heavy: { from: '#FB7185', to: '#E11D48', ripple: '#FECDD3', rgb: '251,113,133' },
 };
 
 function lerp(a: number, b: number, t: number) {
@@ -37,64 +47,48 @@ function getDynamicTheme(percent: number): FillTheme {
   const p = Math.max(0, Math.min(100, percent));
   const stage = stageOf(p);
   const copy = STAGE_COPY[stage];
-
-  let h: number, s: number, l: number;
-  if (p < 50) {
-    const t = p / 50;
-    // Teal (172, 77%, 50%) to Amber (45, 96%, 56%)
-    h = lerp(172, 45, t);
-    s = lerp(77, 96, t);
-    l = lerp(50, 56, t);
-  } else {
-    const t = (p - 50) / 50;
-    // Amber (45, 96%, 56%) to Rose (-13, 89%, 60%)
-    h = lerp(45, -13, t);
-    s = lerp(96, 89, t);
-    l = lerp(56, 60, t);
-  }
-
-  const hNorm = (h + 360) % 360;
-  const baseColor = `hsl(${hNorm}, ${s}%, ${l}%)`;
-  const darkColor = `hsl(${hNorm}, ${s}%, ${l - 12}%)`;
-  const lightColor = `hsl(${hNorm}, ${s}%, ${l + 25}%)`;
+  const colors = STAGE_COLORS[stage];
 
   return {
     stage,
     label: copy.label,
     emoji: copy.emoji,
     mouthPath: MOUTH_PATH[stage],
-    from: baseColor,
-    to: darkColor,
-    ripple: lightColor,
-    glow: `hsla(${hNorm}, ${s}%, ${l}%, 0.55)`,
-    halo: `hsla(${hNorm}, ${s}%, ${l}%, 0.32)`,
+    from: colors.from,
+    to: colors.to,
+    ripple: colors.ripple,
+    glow: `rgba(${colors.rgb}, 0.55)`,
+    halo: `rgba(${colors.rgb}, 0.32)`,
     waveSeconds: lerp(7, 3.2, p / 100),
   };
 }
 
-// 캐릭터 중심(50%,50%) 기준으로 각도·반지름을 지정해 원형으로 고르게 배치합니다.
-// 무작위로 흩뿌리는 대신 일정한 각도 간격(45°)을 쓰면 화려하면서도 정돈된 인상을 줍니다.
+// 캐릭터 중심(50%,50%) 기준으로 각도·반지름을 지정해 배치합니다. 0°(정위)/180°(정아래)
+// 근처는 반지름만큼 그대로 컨테이너 밖(문구 영역)으로 튀어나가 버리므로 피하고, 좌우
+// 40°~140° / 220°~320° "안전지대"에서만 위아래로 지그재그가 되도록 각도를 고릅니다.
 function polar(angleDeg: number, radius: number) {
   const rad = (angleDeg * Math.PI) / 180;
   return { top: `${50 - radius * Math.cos(rad)}%`, left: `${50 + radius * Math.sin(rad)}%` };
 }
 
 const STICKERS: { emoji: string; angle: number; radius: number; size: string; bg: string; delay: string }[] = [
-  { emoji: '🍩', angle: 0, radius: 60, size: 'text-2xl', bg: 'bg-[#FFD9C7]', delay: '0s' },
-  { emoji: '🍭', angle: 45, radius: 66, size: 'text-lg', bg: 'bg-[#E6DBFF]', delay: '0.5s' },
-  { emoji: '🍕', angle: 90, radius: 58, size: 'text-2xl', bg: 'bg-[#FFD1A8]', delay: '1.1s' },
-  { emoji: '🍔', angle: 135, radius: 66, size: 'text-lg', bg: 'bg-[#F7D9A8]', delay: '1.3s' },
-  { emoji: '🍗', angle: 180, radius: 62, size: 'text-xl', bg: 'bg-[#FFDDB8]', delay: '0.7s' },
-  { emoji: '🧁', angle: 225, radius: 66, size: 'text-lg', bg: 'bg-[#C8F4E0]', delay: '1s' },
-  { emoji: '🍪', angle: 270, radius: 58, size: 'text-2xl', bg: 'bg-[#CFE8FF]', delay: '1.5s' },
-  { emoji: '🍰', angle: 315, radius: 66, size: 'text-lg', bg: 'bg-[#FFE3D3]', delay: '0.9s' },
+  // 오른쪽, 위→아래 지그재그
+  { emoji: '🍩', angle: 40, radius: 60, size: 'text-2xl', bg: 'bg-[#FFD9C7]', delay: '0s' },
+  { emoji: '🍕', angle: 75, radius: 66, size: 'text-lg', bg: 'bg-[#FFD1A8]', delay: '1.1s' },
+  { emoji: '🍔', angle: 105, radius: 66, size: 'text-lg', bg: 'bg-[#F7D9A8]', delay: '1.3s' },
+  { emoji: '🍪', angle: 140, radius: 60, size: 'text-2xl', bg: 'bg-[#CFE8FF]', delay: '1.5s' },
+  // 왼쪽, 위→아래 지그재그 (오른쪽과 짝을 이루는 대칭 리듬)
+  { emoji: '🍗', angle: -40, radius: 60, size: 'text-xl', bg: 'bg-[#FFDDB8]', delay: '0.7s' },
+  { emoji: '🍭', angle: -75, radius: 66, size: 'text-lg', bg: 'bg-[#E6DBFF]', delay: '0.5s' },
+  { emoji: '🧁', angle: -105, radius: 66, size: 'text-lg', bg: 'bg-[#C8F4E0]', delay: '1s' },
+  { emoji: '🍰', angle: -140, radius: 60, size: 'text-lg', bg: 'bg-[#FFE3D3]', delay: '0.9s' },
 ];
 
 const SPARKLES: { angle: number; radius: number; size: number; color: string; delay: string }[] = [
-  { angle: 22, radius: 72, size: 14, color: '#C9B6FF', delay: '0.6s' },
-  { angle: 112, radius: 72, size: 11, color: '#34D399', delay: '1.4s' },
-  { angle: 202, radius: 72, size: 12, color: '#FF9A76', delay: '0.9s' },
-  { angle: 292, radius: 72, size: 11, color: '#7DD3FC', delay: '1.8s' },
+  { angle: 58, radius: 56, size: 12, color: '#C9B6FF', delay: '0.6s' },
+  { angle: 122, radius: 56, size: 11, color: '#34D399', delay: '1.4s' },
+  { angle: -122, radius: 56, size: 12, color: '#FF9A76', delay: '0.9s' },
+  { angle: -58, radius: 56, size: 11, color: '#7DD3FC', delay: '1.8s' },
 ];
 
 // 캐릭터 몸통은 svg 좌표계 y=50~190(높이 140) 사각형입니다. percent가 클수록(=아직
@@ -122,7 +116,7 @@ export function WaveVisualization({
 
   return (
     <div id="hero" className="flex scroll-mt-20 flex-col items-center gap-4">
-      <div className="relative flex w-full flex-col items-center">
+      <div className="relative mb-4 flex w-full flex-col items-center lg:mb-0">
         {/* 캐릭터 주위를 떠다니는 간식 스티커 — 장식용, 데이터 없음 */}
         {STICKERS.map((s, i) => {
           const pos = polar(s.angle, s.radius);
@@ -156,7 +150,7 @@ export function WaveVisualization({
         })}
 
         <div
-          className="wave-halo mx-auto h-[clamp(260px,72vw,380px)] w-[clamp(240px,66vw,350px)]"
+          className="wave-halo mx-auto h-[clamp(260px,72vw,380px)] w-[clamp(240px,66vw,350px)] lg:h-[340px] lg:w-[310px] xl:h-[400px] xl:w-[360px] 2xl:h-[460px] 2xl:w-[420px]"
           style={haloStyle}
         >
           <div className="wave-backdrop-glow" aria-hidden="true" />
@@ -266,18 +260,6 @@ export function WaveVisualization({
               </g>
             )}
 
-            {/* 슬슬 쌓이는 중일 때만 보이는 번개(활기) 디테일 */}
-            {theme.stage === 'rising' && (
-              <path
-                d="M154,58 L144,74 L151,74 L147,90 L162,70 L154,70 Z"
-                fill="#FBBF24"
-                stroke="#F59E0B"
-                strokeWidth="1"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              />
-            )}
-
             {/* 많이 쌓였을 때만 보이는 땀방울 2개 */}
             {theme.stage === 'heavy' && (
               <>
@@ -291,32 +273,32 @@ export function WaveVisualization({
 
       <div className="text-center">
         <span
-          className="inline-flex items-center gap-1 text-[11px] font-semibold tracking-wide"
+          className="inline-flex items-center gap-1 text-[11px] font-semibold tracking-wide lg:text-sm"
           style={{ color: theme.from }}
         >
           <span aria-hidden="true">{theme.emoji}</span>
           {theme.label}
         </span>
-        <p className="mt-1 text-xs font-medium tracking-wide text-navy-soft">오늘 누적 칼로리</p>
-        <p className="font-display text-3xl text-charcoal sm:text-4xl">
+        <p className="mt-1 text-xs font-medium tracking-wide text-navy-soft lg:text-sm">오늘 누적 칼로리</p>
+        <p className="font-display text-3xl text-charcoal sm:text-4xl lg:text-5xl">
           {Math.round(currentEnergyKcal)}
-          <span className="ml-0.5 text-base font-semibold text-navy-soft">kcal</span>
+          <span className="ml-0.5 text-base font-semibold text-navy-soft lg:text-xl">kcal</span>
         </p>
       </div>
 
-      <div className="flex items-center gap-6 text-center">
+      <div className="-mt-[3px] flex items-center gap-6 text-center lg:mt-0 lg:gap-8">
         <div>
-          <p className="text-xl font-bold text-charcoal">{snackCount}</p>
-          <p className="text-xs text-navy-soft">오늘 기록한 간식</p>
+          <p className="text-xl font-bold text-charcoal lg:text-2xl">{snackCount}</p>
+          <p className="text-xs text-navy-soft lg:text-sm">오늘 기록한 간식</p>
         </div>
-        <div className="h-8 w-px bg-navy/10" />
+        <div className="h-8 w-px bg-navy/10 lg:h-10" />
         <button
           type="button"
           onClick={onCompletedWorkoutsClick}
           className="rounded-xl px-2 py-1 transition-colors hover:bg-navy/5 active:scale-95"
         >
-          <p className="text-xl font-bold text-charcoal">{completedWorkoutCount}</p>
-          <p className="text-xs text-navy-soft">완료한 움직임</p>
+          <p className="text-xl font-bold text-charcoal lg:text-2xl">{completedWorkoutCount}</p>
+          <p className="text-xs text-navy-soft lg:text-sm">완료한 움직임</p>
         </button>
       </div>
     </div>

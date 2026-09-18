@@ -24,6 +24,7 @@ function buildPrompt(body: {
   noiseOk: boolean;
   jumpOk: boolean;
   totalCalories: number;
+  extraRequest?: string;
 }): string {
   const placeLabel = PLACE_LABEL[body.place] ?? body.place;
   const intensityLabel = INTENSITY_LABEL[body.intensity] ?? body.intensity;
@@ -38,6 +39,7 @@ function buildPrompt(body: {
 - 소리를 내도 되는지: ${body.noiseOk ? '괜찮음' : '조용해야 함(이웃 등 고려, 점프·쿵쿵거리는 동작 피하기)'}
 - 점프 동작 가능 여부: ${body.jumpOk ? '가능' : '불가능(무릎 부담 등으로 점프 없는 동작만)'}
 - 참고용 목표 칼로리: 약 ${Math.round(body.totalCalories)}kcal (정확히 맞출 필요는 없고, 주어진 시간 안에서 현실적인 범위로 추정)
+${body.extraRequest ? `- 사용자의 추가 요청사항(참고해서 반영하되, 위 조건과 충돌하면 위 조건을 우선하세요): ${body.extraRequest}` : ''}
 
 정확히 3개의 루틴을 만들어주세요. 소음과 점프 조건을 반드시 지켜주세요.
 estBurnLowKcal은 estBurnHighKcal보다 작거나 같아야 합니다.`;
@@ -75,6 +77,8 @@ export async function runRecommendRoutine(rawBody: unknown): Promise<ApiResult> 
     return { status: 400, body: { error: 'minutes, place, intensity 값이 올바르지 않습니다.' } };
   }
 
+  const extraRequest = typeof body?.extraRequest === 'string' ? body.extraRequest.trim().slice(0, 200) : '';
+
   const promptText = buildPrompt({
     minutes,
     place,
@@ -82,6 +86,7 @@ export async function runRecommendRoutine(rawBody: unknown): Promise<ApiResult> 
     noiseOk: Boolean(body?.noiseOk),
     jumpOk: Boolean(body?.jumpOk),
     totalCalories: Number(body?.totalCalories) || 0,
+    extraRequest: extraRequest || undefined,
   });
 
   const requestPayload = {
