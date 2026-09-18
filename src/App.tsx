@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AppHeader } from './components/AppHeader';
-import { WaveVisualization, type RunnerCharacter } from './components/WaveVisualization';
+import { WaveVisualization } from './components/WaveVisualization';
 import { BalanceScale } from './components/BalanceScale';
 import { SnackCard } from './components/SnackCard';
 import { SelectionBar } from './components/SelectionBar';
@@ -26,21 +26,10 @@ export default function App() {
   const [state, setState] = useState<AppState>(() => loadState());
   const [screen, setScreen] = useState<Screen>('tray');
   const [modal, setModal] = useState<ModalState>(null);
-  const [character, setCharacter] = useState<RunnerCharacter>(
-    () => (localStorage.getItem('afterbite_character') as RunnerCharacter) || 'male'
-  );
 
   useEffect(() => {
     saveState(state);
   }, [state]);
-
-  function toggleCharacter() {
-    setCharacter((prev) => {
-      const next = prev === 'male' ? 'female' : 'male';
-      localStorage.setItem('afterbite_character', next);
-      return next;
-    });
-  }
 
   // 헤더 로고를 누르면 어느 화면에 있든 홈으로 돌아가 메인 캐릭터가 있는 위치로 스크롤합니다.
   function goHome() {
@@ -152,8 +141,6 @@ export default function App() {
         fillPercent={fillPercent}
         snackCount={state.snacks.length}
         completedWorkoutCount={state.completedWorkouts.length}
-        character={character}
-        onToggleCharacter={toggleCharacter}
       />
 
       <BalanceScale percent={fillPercent} />

@@ -1,87 +1,78 @@
 import type { CSSProperties } from 'react';
-import runnerMale from '../assets/runner-male.jpg';
-import runnerFemale from '../assets/runner-female.jpg';
-
-export type RunnerCharacter = 'male' | 'female';
 
 interface WaveVisualizationProps {
   currentEnergyKcal: number;
   fillPercent: number;
   snackCount: number;
   completedWorkoutCount: number;
-  character: RunnerCharacter;
-  onToggleCharacter: () => void;
 }
 
-const RUNNER_IMAGE: Record<RunnerCharacter, string> = {
-  male: runnerMale,
-  female: runnerFemale,
-};
+type Stage = 'light' | 'rising' | 'heavy';
 
-const RUNNER_SCALE: Record<RunnerCharacter, number> = {
-  male: 1.15,
-  female: 1,
-};
-
-// 남성 실루엣은 확대하면서 머리가 위쪽 버튼과 겹치지 않도록 아래로 살짝 내려줍니다.
-const RUNNER_SHIFT_PERCENT: Record<RunnerCharacter, number> = {
-  male: 7,
-  female: 0,
-};
-
-// 에너지가 많이 쌓일수록(=아직 못 움직인 만큼 많을수록) "안 좋은" 방향이라는 걸
-// 색과 속도로 드러내기 위한 3단계 테마입니다. calm(가벼움) → building(쌓이는 중) → heavy(많이 쌓임)
 interface FillTheme {
+  stage: Stage;
   label: string;
   emoji: string;
   from: string;
   to: string;
-  crest: string;
   ripple: string;
   glow: string;
   halo: string;
   waveSeconds: number;
+  mouthPath: string;
 }
+
+const STAGE_COPY: Record<Stage, { label: string; emoji: string; mouthPath: string }> = {
+  // 웃는 입 — 아직 덜 쌓여서 가벼운 상태
+  light: { label: '가벼운 상태예요, 건강 그 자체예요', emoji: '🌱', mouthPath: 'M86,126 Q100,141 114,126' },
+  // 살짝 무표정 — 슬슬 쌓이는 중
+  rising: { label: '슬슬 쌓이고 있어요', emoji: '⚡', mouthPath: 'M89,130 Q100,133 111,130' },
+  // 처진 입(걱정) — 많이 쌓임
+  heavy: { label: '많이 쌓였어요, 같이 움직여요', emoji: '🔥', mouthPath: 'M87,133 Q100,121 113,133' },
+};
 
 function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
+function stageOf(percent: number): Stage {
+  if (percent < 35) return 'light';
+  if (percent < 70) return 'rising';
+  return 'heavy';
+}
+
 function getDynamicTheme(percent: number): FillTheme {
   const p = Math.max(0, Math.min(100, percent));
-  
-  let h, s, l;
-  let emoji, label;
-  
+  const stage = stageOf(p);
+  const copy = STAGE_COPY[stage];
+
+  let h: number, s: number, l: number;
   if (p < 50) {
     const t = p / 50;
     // Teal (172, 77%, 50%) to Amber (45, 96%, 56%)
     h = lerp(172, 45, t);
     s = lerp(77, 96, t);
     l = lerp(50, 56, t);
-    emoji = p < 25 ? '🌱' : '⚡';
-    label = p < 25 ? '가벼운 상태예요' : '슬슬 쌓이고 있어요';
   } else {
     const t = (p - 50) / 50;
     // Amber (45, 96%, 56%) to Rose (-13, 89%, 60%)
     h = lerp(45, -13, t);
     s = lerp(96, 89, t);
     l = lerp(56, 60, t);
-    emoji = p < 80 ? '🔥' : '🚨';
-    label = p < 80 ? '많이 쌓였어요' : '최대치예요!';
   }
-  
+
   const hNorm = (h + 360) % 360;
   const baseColor = `hsl(${hNorm}, ${s}%, ${l}%)`;
   const darkColor = `hsl(${hNorm}, ${s}%, ${l - 12}%)`;
   const lightColor = `hsl(${hNorm}, ${s}%, ${l + 25}%)`;
-  
+
   return {
-    label,
-    emoji,
+    stage,
+    label: copy.label,
+    emoji: copy.emoji,
+    mouthPath: copy.mouthPath,
     from: baseColor,
     to: darkColor,
-    crest: baseColor,
     ripple: lightColor,
     glow: `hsla(${hNorm}, ${s}%, ${l}%, 0.55)`,
     halo: `hsla(${hNorm}, ${s}%, ${l}%, 0.32)`,
@@ -98,16 +89,21 @@ const STICKERS: { emoji: string; top: string; left: string; size: string; bg: st
   { emoji: '🍪', top: '50%', left: '86%', size: 'text-xl', bg: 'bg-[#CFE8FF]', delay: '1.5s' },
 ];
 
+// 캐릭터 몸통은 svg 좌표계 y=50~190(높이 140) 사각형입니다. percent가 클수록(=아직
+// 못 움직인 만큼이 많을수록) 물이 위로 차오르도록 waveY를 아래→위로 옮깁니다.
+function waveYFor(percent: number) {
+  return 190 - 1.4 * Math.max(0, Math.min(100, percent));
+}
+
 export function WaveVisualization({
   currentEnergyKcal,
   fillPercent,
   snackCount,
   completedWorkoutCount,
-  character,
-  onToggleCharacter,
 }: WaveVisualizationProps) {
   const clamped = Math.max(0, Math.min(100, fillPercent));
   const theme = getDynamicTheme(clamped);
+  const waveY = waveYFor(clamped);
   const haloStyle = {
     '--halo-color': theme.halo,
     '--halo-speed': `${theme.waveSeconds + 1.3}s`,
@@ -115,7 +111,7 @@ export function WaveVisualization({
 
   return (
     <div id="hero" className="flex scroll-mt-20 flex-col items-center gap-4">
-      <div className="relative flex w-full flex-col items-center gap-4">
+      <div className="relative flex w-full flex-col items-center">
         {/* 캐릭터 주위를 떠다니는 간식 스티커 — 장식용, 데이터 없음 */}
         {STICKERS.map((s, i) => (
           <span
@@ -128,111 +124,125 @@ export function WaveVisualization({
           </span>
         ))}
 
-        <svg width="0" height="0" className="absolute" aria-hidden="true">
-        <defs>
-          {/* 실루엣 원본 배경이 흰색이든 체크무늬(투명 미리보기)든 밝기만으로
-              보이는 부분을 가르도록 흑백 변환 + 임계값 처리 — 배경이 얼룩덜룩해도
-              루미넌스 마스크가 안정적으로 동작함 */}
-          <filter id="afterbite-silhouette-filter" colorInterpolationFilters="sRGB">
-            <feColorMatrix
-              type="matrix"
-              values="0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0 0 0 1 0"
-            />
-            <feComponentTransfer>
-              <feFuncR type="discrete" tableValues="1 1 1 1 1 0 0 0 0 0" />
-              <feFuncG type="discrete" tableValues="1 1 1 1 1 0 0 0 0 0" />
-              <feFuncB type="discrete" tableValues="1 1 1 1 1 0 0 0 0 0" />
-            </feComponentTransfer>
-          </filter>
-          <mask id="afterbite-runner-mask" maskContentUnits="objectBoundingBox">
-            <image
-              href={RUNNER_IMAGE[character]}
-              x="0"
-              y="0"
-              width="1"
-              height="1"
-              preserveAspectRatio="xMidYMax meet"
-              filter="url(#afterbite-silhouette-filter)"
-              style={{
-                transformBox: 'fill-box',
-                transformOrigin: '50% 100%',
-                transform: `translateY(${RUNNER_SHIFT_PERCENT[character]}%) scale(${RUNNER_SCALE[character]})`,
-              }}
-            />
-          </mask>
-        </defs>
-      </svg>
-
-      <button
-        type="button"
-        onClick={onToggleCharacter}
-        data-on={character === 'female'}
-        aria-label={character === 'male' ? '여성 캐릭터로 전환' : '남성 캐릭터로 전환'}
-        className="gender-switch"
-      >
-        <span className="gender-switch-thumb" aria-hidden="true" />
-      </button>
-
-      <div
-        className="wave-halo mx-auto h-[clamp(260px,72vw,380px)] w-[clamp(240px,66vw,350px)]"
-        style={haloStyle}
-      >
-        <div className="wave-backdrop-glow" aria-hidden="true" />
         <div
-          className="wave-glow relative h-full w-full bg-white/12"
-          style={
-            {
-              maskImage: 'url(#afterbite-runner-mask)',
-              WebkitMaskImage: 'url(#afterbite-runner-mask)',
-              '--glow-color': theme.glow,
-            } as CSSProperties
-          }
+          className="wave-halo mx-auto h-[clamp(260px,72vw,380px)] w-[clamp(240px,66vw,350px)]"
+          style={haloStyle}
         >
-          <div
-            className="wave-fill-transition absolute inset-x-0 bottom-0"
-            style={{ height: `${clamped}%` }}
-          >
-            <div className="absolute inset-x-0 -top-3 h-6 overflow-hidden">
-              <svg
-                className="wave-layer h-6 w-[200%]"
-                viewBox="0 0 400 24"
-                preserveAspectRatio="none"
-                style={{ animationDuration: `${theme.waveSeconds}s` }}
-              >
-                <path
-                  d="M0 12 C 50 0, 150 24, 200 12 C 250 0, 350 24, 400 12 L 400 24 L 0 24 Z"
-                  fill={theme.crest}
-                  opacity="0.85"
-                />
-                <path
-                  d="M200 12 C 250 0, 350 24, 400 12 C 450 0, 550 24, 600 12 L 600 24 L 200 24 Z"
-                  fill={theme.crest}
-                  opacity="0.85"
-                />
-              </svg>
-            </div>
-            <div
-              className="wave-layer wave-layer-slow absolute inset-x-0 -top-2 h-5 overflow-hidden opacity-60"
-              style={{ animationDuration: `${theme.waveSeconds * 1.6}s` }}
-            >
-              <svg className="h-5 w-[200%]" viewBox="0 0 400 20" preserveAspectRatio="none">
-                <path
-                  d="M0 10 C 60 20, 140 0, 200 10 C 260 20, 340 0, 400 10 L 400 20 L 0 20 Z"
-                  fill={theme.ripple}
-                />
-                <path
-                  d="M200 10 C 260 20, 340 0, 400 10 C 460 20, 540 0, 600 10 L 600 20 L 200 20 Z"
-                  fill={theme.ripple}
-                />
-              </svg>
-            </div>
-            <div
-              className="absolute inset-x-0 bottom-0 top-3"
-              style={{ backgroundImage: `linear-gradient(180deg, ${theme.from}, ${theme.to})` }}
+          <div className="wave-backdrop-glow" aria-hidden="true" />
+
+          <svg viewBox="0 0 200 220" className="relative h-full w-full" role="img" aria-label="오늘의 에너지 친구">
+            <defs>
+              <linearGradient id="afterbite-stage-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={theme.from} style={{ transition: 'stop-color 700ms ease' }} />
+                <stop offset="100%" stopColor={theme.to} style={{ transition: 'stop-color 700ms ease' }} />
+              </linearGradient>
+              <clipPath id="afterbite-body-clip">
+                <rect x="30" y="50" width="140" height="140" rx="62" />
+              </clipPath>
+            </defs>
+
+            {/* 그림자 */}
+            <ellipse cx="70" cy="196" rx="17" ry="10" fill="#4A3728" opacity="0.12" />
+            <ellipse cx="130" cy="196" rx="17" ry="10" fill="#4A3728" opacity="0.12" />
+
+            {/* 몸통 바탕 (아직 안 채워진 부분) */}
+            <rect
+              x="30"
+              y="50"
+              width="140"
+              height="140"
+              rx="62"
+              fill="#FFE9D6"
+              stroke="rgba(74,55,40,0.14)"
+              strokeWidth="3"
             />
-          </div>
+
+            {/* 채워진 만큼 차오르는 물결 (percent가 클수록 많이 참) */}
+            <g clipPath="url(#afterbite-body-clip)">
+              <rect
+                className="wave-rect-transition"
+                x="30"
+                y={waveY}
+                width="140"
+                height="160"
+                fill="url(#afterbite-stage-grad)"
+              />
+              <ellipse
+                className="ripple-a wave-rect-transition"
+                cx="55"
+                cy={waveY}
+                rx="70"
+                ry="6"
+                fill="rgba(255,255,255,0.4)"
+                style={{ animationDuration: `${theme.waveSeconds}s` }}
+              />
+              <ellipse
+                className="ripple-b wave-rect-transition"
+                cx="140"
+                cy={waveY}
+                rx="70"
+                ry="5"
+                fill="rgba(255,255,255,0.26)"
+                style={{ animationDuration: `${theme.waveSeconds}s` }}
+              />
+            </g>
+
+            {/* 귀 */}
+            <ellipse
+              cx="22"
+              cy="118"
+              rx="13"
+              ry="19"
+              fill="#FFE9D6"
+              stroke="rgba(74,55,40,0.14)"
+              strokeWidth="2.5"
+              transform="rotate(18 22 118)"
+            />
+            <ellipse
+              cx="178"
+              cy="118"
+              rx="13"
+              ry="19"
+              fill="#FFE9D6"
+              stroke="rgba(74,55,40,0.14)"
+              strokeWidth="2.5"
+              transform="rotate(-18 178 118)"
+            />
+
+            {/* 얼굴 */}
+            <circle cx="78" cy="108" r="11" fill="#4A3728" />
+            <circle cx="81.5" cy="104.5" r="3" fill="#ffffff" />
+            <circle cx="122" cy="108" r="11" fill="#4A3728" />
+            <circle cx="125.5" cy="104.5" r="3" fill="#ffffff" />
+            <ellipse cx="66" cy="126" rx="10" ry="6" fill="#FF9A8B" opacity="0.55" />
+            <ellipse cx="134" cy="126" rx="10" ry="6" fill="#FF9A8B" opacity="0.55" />
+            <path
+              d={theme.mouthPath}
+              fill="none"
+              stroke="#4A3728"
+              strokeWidth="3.2"
+              strokeLinecap="round"
+              style={{ transition: 'd 400ms ease' }}
+            />
+
+            {/* 가벼운 상태일 때만 보이는 새싹 */}
+            {theme.stage === 'light' && (
+              <g transform="translate(100,44)" aria-hidden="true">
+                <line x1="0" y1="6" x2="0" y2="18" stroke="#16A34A" strokeWidth="3" strokeLinecap="round" />
+                <ellipse cx="0" cy="0" rx="9" ry="15" fill="#4ADE80" transform="rotate(-18 0 0)" />
+              </g>
+            )}
+
+            {/* 많이 쌓였을 때만 보이는 땀방울 */}
+            {theme.stage === 'heavy' && (
+              <path
+                d="M150,64 C146,72 146,80 150,82 C154,80 154,72 150,64 Z"
+                fill="#7DD3FC"
+                aria-hidden="true"
+              />
+            )}
+          </svg>
         </div>
-      </div>
       </div>
 
       <div className="text-center">

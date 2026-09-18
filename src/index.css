@@ -34,27 +34,29 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* 물결 애니메이션: 두 겹의 wave path를 좌우로 흘려서 자연스러운 물결감을 만듭니다. */
-@keyframes wave-scroll {
-  from {
-    transform: translateX(0);
+/* 캐릭터 몸 안의 물결: 차오른 높이가 부드럽게 바뀌고, 표면이 좌우로 살짝 출렁입니다. */
+.wave-rect-transition {
+  transition: y 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes ripple-move {
+  0% {
+    transform: translateX(-26px);
   }
-  to {
-    transform: translateX(-50%);
+  50% {
+    transform: translateX(12px);
+  }
+  100% {
+    transform: translateX(-26px);
   }
 }
 
-.wave-layer {
-  animation: wave-scroll 7s linear infinite;
+.ripple-a {
+  animation: ripple-move 5s ease-in-out infinite;
 }
 
-.wave-layer.wave-layer-slow {
-  animation-duration: 11s;
-  animation-direction: reverse;
-}
-
-.wave-fill-transition {
-  transition: height 900ms cubic-bezier(0.22, 1, 0.36, 1);
+.ripple-b {
+  animation: ripple-move 5s ease-in-out infinite reverse;
 }
 
 .btn-primary {
@@ -144,15 +146,6 @@ body {
   animation: sparkle-twinkle 2.2s ease-in-out infinite;
 }
 
-.wave-glow {
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 25px 70px -16px var(--glow-color, rgba(255, 154, 118, 0.45));
-  transition:
-    box-shadow 700ms ease,
-    filter 700ms ease;
-}
-
 /* 캐릭터 주변에 은은하게 번지는 블롭 글로우 + 이중 링 — 사진이 배경에서 확실히 도드라지도록 함.
    색상/속도는 에너지 상태(calm/building/heavy)에 따라 JS에서 CSS 변수로 전달됩니다. */
 .wave-halo {
@@ -209,36 +202,6 @@ body {
   }
 }
 
-/* 캐릭터 on/off 스위치 */
-.gender-switch {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  width: 72px;
-  height: 36px;
-  padding: 3px;
-  border-radius: 9999px;
-  border: 1px solid rgba(74, 55, 40, 0.12);
-  background: rgba(74, 55, 40, 0.05);
-  cursor: pointer;
-}
-
-.gender-switch-thumb {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-teal), var(--color-aqua));
-  box-shadow: 0 4px 12px rgba(255, 122, 89, 0.45);
-  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.gender-switch[data-on='true'] .gender-switch-thumb {
-  transform: translateX(36px);
-}
-
 /* 0~100% 균형 게이지 막대 (낮을수록 건강한 쪽) */
 .balance-track {
   position: relative;
@@ -273,11 +236,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .wave-layer,
-  .wave-layer.wave-layer-slow {
-    animation: none !important;
-  }
-  .wave-fill-transition {
+  .wave-rect-transition {
     transition-duration: 300ms !important;
   }
   * {
