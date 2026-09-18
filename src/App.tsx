@@ -139,7 +139,10 @@ export default function App() {
           고정(sticky)해서 오른쪽 트레이를 스크롤해도 계속 보이게 했습니다. */}
       <div className="home-grid">
         <header className="home-grid-title mb-2 text-center lg:mb-0">
-          <p className="text-xs font-bold uppercase tracking-[2px] text-navy-soft sm:text-sm lg:text-base">
+          <p className="font-brand text-sm text-teal sm:text-base lg:text-lg">
+            오늘 먹은 간식, 오늘의 운동으로 가볍게
+          </p>
+          <p className="mt-2 text-xs font-bold uppercase tracking-[2px] text-navy-soft sm:text-sm lg:text-base">
             오늘의 밸런스
           </p>
           <h1 className="font-brand mt-1 bg-gradient-to-r from-teal to-aqua bg-clip-text text-6xl tracking-tight text-transparent drop-shadow-[0_6px_18px_rgba(255,122,89,0.4)] sm:text-7xl lg:text-8xl">
