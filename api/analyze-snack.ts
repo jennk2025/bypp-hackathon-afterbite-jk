@@ -1,7 +1,10 @@
 // Vercel 서버리스 함수 (Node.js 런타임)로 배포됩니다.
 // Gemini API 키는 여기(서버 쪽 환경변수)에만 존재하며 브라우저로 절대 전달되지 않습니다.
 
-const CANDIDATE_MODELS = ['gemini-1.5-flash', 'gemini-1.5-flash-8b'];
+// gemini-1.5-flash 계열은 이미 서비스 종료되어 전부 404를 반환합니다.
+// gemini-flash-latest는 Google이 최신 안정 Flash 모델로 계속 갈아끼워주는 alias라
+// 특정 버전을 못박아둘 때처럼 또 조용히 끊기는 일을 막아줍니다.
+const CANDIDATE_MODELS = ['gemini-flash-latest', 'gemini-2.5-flash'];
 
 const PROMPT = `이 사진은 과자, 음료, 빵, 아이스크림 등 간식의 포장지(앞면) 또는 영양정보 표(뒷면)입니다.
 사진을 꼼꼼히 분석하여 아래 JSON 형식으로만 응답하세요. 마크다운 코드블록이나 다른 부연 설명 없이 오직 순수 JSON만 반환하세요:

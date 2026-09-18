@@ -1,5 +1,8 @@
 // Vercel 서버리스 함수 (Node.js 런타임)
-const CANDIDATE_MODELS = ['gemini-1.5-flash', 'gemini-1.5-flash-8b'];
+// gemini-1.5-flash 계열은 이미 서비스 종료되어 전부 404를 반환합니다.
+// gemini-flash-latest는 Google이 최신 안정 Flash 모델로 계속 갈아끼워주는 alias라
+// 특정 버전을 못박아둘 때처럼 또 조용히 끊기는 일을 막아줍니다.
+const CANDIDATE_MODELS = ['gemini-flash-latest', 'gemini-2.5-flash'];
 
 const PLACE_LABEL: Record<string, string> = {
   narrow_indoor: '좁은 실내(방 한 칸 정도)',
