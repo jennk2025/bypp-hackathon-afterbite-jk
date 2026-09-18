@@ -41,6 +41,7 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     return () => {
@@ -73,9 +74,9 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
       setPreviewUrl(null);
 
       if (result.success) {
-        setName(result.nameGuess);
+        if (result.nameGuess) setName(result.nameGuess);
         if (result.caloriesGuess != null) setCalories(String(result.caloriesGuess));
-        setServingSizeLabel(result.servingSizeGuess);
+        if (result.servingSizeGuess) setServingSizeLabel(result.servingSizeGuess);
         setSource('photo');
       }
       setOcrNote(result.note);
@@ -121,33 +122,70 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
         <div className="flex-1 overflow-y-auto px-5 py-5">
           {step === 'choose' && (
             <div className="flex flex-col gap-3">
+              {/* 스마트폰 고화질 카메라 촬영 (네이티브) */}
               <button
                 type="button"
-                onClick={() => setStep('camera')}
-                className="flex items-center gap-3 rounded-2xl border border-navy/10 bg-ivory-card px-4 py-4 text-left shadow-sm transition-transform active:scale-[0.98]"
+                onClick={() => cameraInputRef.current?.click()}
+                className="flex items-center gap-3 rounded-2xl border-2 border-teal/40 bg-ivory-card px-4 py-4 text-left shadow-sm transition-transform active:scale-[0.98]"
               >
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-aqua to-teal text-lg shadow-sm">
                   📸
                 </span>
                 <span>
-                  <span className="block text-sm font-semibold text-charcoal">카메라로 촬영하기</span>
+                  <span className="flex items-center gap-1.5 text-sm font-bold text-charcoal">
+                    스마트폰 카메라로 촬영
+                    <span className="rounded-full bg-teal/15 px-1.5 py-0.5 text-[10px] font-semibold text-teal">
+                      고화질 추천
+                    </span>
+                  </span>
                   <span className="block text-xs text-navy-soft">
-                    지금 바로 포장지·영양정보를 찍어서 인식해요
+                    스마트폰 카메라 앱으로 선명하게 찍어 AI가 자동 분석해요
                   </span>
                 </span>
               </button>
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleFileSelected(file);
+                  e.target.value = '';
+                }}
+              />
+
+              {/* 실시간 화면 보며 촬영 (웹캠) */}
+              <button
+                type="button"
+                onClick={() => setStep('camera')}
+                className="flex items-center gap-3 rounded-2xl border border-navy/10 bg-ivory-card px-4 py-3.5 text-left shadow-sm transition-transform active:scale-[0.98]"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-navy/10 text-base">
+                  📹
+                </span>
+                <span>
+                  <span className="block text-sm font-semibold text-charcoal">실시간 화면 보며 촬영</span>
+                  <span className="block text-xs text-navy-soft">
+                    브라우저 화면에서 구도를 보며 찍어요
+                  </span>
+                </span>
+              </button>
+
+              {/* 갤러리/파일 사진 업로드 */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-3 rounded-2xl border border-navy/10 bg-ivory-card px-4 py-4 text-left shadow-sm transition-transform active:scale-[0.98]"
+                className="flex items-center gap-3 rounded-2xl border border-navy/10 bg-ivory-card px-4 py-3.5 text-left shadow-sm transition-transform active:scale-[0.98]"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lavender to-aqua text-lg shadow-sm">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lavender to-aqua text-base shadow-sm">
                   🖼️
                 </span>
                 <span>
                   <span className="block text-sm font-semibold text-charcoal">사진 업로드하기</span>
                   <span className="block text-xs text-navy-soft">
-                    이미 찍어둔 포장지·영양정보 사진을 올려요
+                    앨범에 저장된 포장지·영양정보 사진을 선택해요
                   </span>
                 </span>
               </button>
@@ -162,21 +200,23 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                   e.target.value = '';
                 }}
               />
+
+              {/* 직접 입력하기 */}
               <button
                 type="button"
                 onClick={() => {
                   setSource('manual');
                   setStep('form');
                 }}
-                className="flex items-center gap-3 rounded-2xl border border-navy/10 bg-ivory-card px-4 py-4 text-left shadow-sm transition-transform active:scale-[0.98]"
+                className="flex items-center gap-3 rounded-2xl border border-navy/10 bg-ivory-card px-4 py-3.5 text-left shadow-sm transition-transform active:scale-[0.98]"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal to-aqua text-lg shadow-sm">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal to-aqua text-base shadow-sm">
                   ✍️
                 </span>
                 <span>
-                  <span className="block text-sm font-semibold text-charcoal">직접 입력하기</span>
+                  <span className="block text-sm font-semibold text-charcoal">직접 입력 / 검색</span>
                   <span className="block text-xs text-navy-soft">
-                    제품명을 입력하면 참고 정보를 제안해줘요
+                    제품명을 검색하거나 직접 칼로리를 입력해요
                   </span>
                 </span>
               </button>

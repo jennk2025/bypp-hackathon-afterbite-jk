@@ -7,7 +7,8 @@ import type { AppState, Snack } from '../types';
 export function useSnackTray(setState: Dispatch<SetStateAction<AppState>>, snacks: Snack[]) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const selectableSnacks = snacks.filter((s) => s.exerciseStatus === 'none');
+  // 남은 칼로리가 0이 될 때까지는 항상 선택 가능하도록 개방합니다.
+  const selectableSnacks = snacks.filter((s) => s.remainingCalories > 0);
   const allSelected = selectableSnacks.length > 0 && selectableSnacks.every((s) => selectedIds.has(s.id));
   const selectedTotalCalories = snacks
     .filter((s) => selectedIds.has(s.id))

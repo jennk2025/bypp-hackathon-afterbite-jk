@@ -1,27 +1,41 @@
 // Vercel 서버리스 함수 (Node.js 런타임)로 배포됩니다.
 // Gemini API 키는 여기(서버 쪽 환경변수)에만 존재하며 브라우저로 절대 전달되지 않습니다.
-//
-// 실제 로직은 runAnalyzeSnack()에 있고, 아래 default export는 그걸 Vercel의
-// (req, res) 시그니처로 감싸는 얇은 어댑터입니다. vite-plugins/apiDevServer.ts가
-// `npm run dev` 중에도 runAnalyzeSnack()을 그대로 불러 써서, 로컬에서도 실제
-// Gemini 연동 코드를 그대로 태워볼 수 있습니다(배포 때만 동작하는 handler를 거치지 않고).
 
-const GEMINI_MODEL = 'gemini-2.0-flash';
+const CANDIDATE_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash'];
 
-const PROMPT = `이 사진은 과자·음료·아이스크림 등 간식의 포장지 또는 영양정보 표입니다.
-사진 속 내용을 바탕으로 아래 JSON 형식으로만 답하세요. 다른 설명은 절대 덧붙이지 마세요.
-{"name": "제품명 또는 빈 문자열", "caloriesPerServing": 1회 제공량 기준 칼로리(숫자) 또는 null, "servingSizeLabel": "1회 제공량 설명 또는 빈 문자열"}
-확실하지 않은 값은 추측하지 말고 null 또는 빈 문자열로 답하세요.`;
+const PROMPT = `이 사진은 과자, 음료, 빵, 아이스크림 등 간식의 포장지(앞면) 또는 영양정보 표(뒷면)입니다.
+사진을 꼼꼼히 분석하여 아래 JSON 형식으로만 응답하세요. 마크다운 코드블록이나 다른 부연 설명 없이 오직 순수 JSON만 반환하세요:
+{
+  "detectedType": "package_front" | "nutrition_facts" | "both" | "unknown",
+  "name": "제품 브랜드명 및 상품명 (예: '포카칩 오리지널', '코카콜라 제로', 포장지에 크게 적힌 글자)",
+  "caloriesPerServing": 1회 제공량(또는 총 내용량) 기준 칼로리(숫자, 예: 325) 또는 null,
+  "servingSizeLabel": "1회 제공량 및 기준 설명 (예: '1봉지(66g)', '총 500ml')",
+  "totalContentCalories": 총 내용량 전체 칼로리(숫자) 또는 null
+}
+규칙:
+1. 영양정보 표에 '1회 제공량당' 또는 '총 내용량당' 열량이 있으면 숫자로 적으세요.
+2. 제품명이 크게 적혀있으면 브랜드명과 함께 정확하게 적으세요.
+3. 찾을 수 없는 항목은 빈 문자열("") 또는 null로 채우세요. 추측해서 지어내지 마세요.`;
 
 export interface ApiResult {
   status: number;
   body: Record<string, unknown>;
 }
 
-export async function runAnalyzeSnack(body: any): Promise<ApiResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
+export async function runAnalyzeSnack(rawBody: any): Promise<ApiResult> {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
-    return { status: 500, body: { error: 'Server not configured' } };
+    console.error('[analyze-snack] GEMINI_API_KEY is missing from environment variables');
+    return { status: 500, body: { error: 'Server not configured (API key missing)' } };
+  }
+
+  let body: any = rawBody;
+  if (typeof rawBody === 'string') {
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return { status: 400, body: { error: 'Invalid JSON body' } };
+    }
   }
 
   const { imageBase64, mimeType } = body ?? {};
@@ -29,61 +43,83 @@ export async function runAnalyzeSnack(body: any): Promise<ApiResult> {
     return { status: 400, body: { error: 'imageBase64 required' } };
   }
 
-  try {
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+  const requestPayload = {
+    contents: [
       {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                { text: PROMPT },
-                { inline_data: { mime_type: mimeType || 'image/jpeg', data: imageBase64 } },
-              ],
+        parts: [
+          { text: PROMPT },
+          {
+            inlineData: {
+              mimeType: mimeType || 'image/jpeg',
+              data: imageBase64,
             },
-          ],
-          generationConfig: { responseMimeType: 'application/json' },
-        }),
-      }
-    );
-
-    if (!geminiRes.ok) {
-      // Vercel 함수 로그(대시보드 > 프로젝트 > Deployments > 함수 로그)에서 실제 원인을
-      // 확인할 수 있도록 남깁니다. 흔한 원인: 키 오타/무효, Generative Language API
-      // 미활성화, 해당 리전/모델 접근 불가, 쿼터 초과 등.
-      const errorText = await geminiRes.text().catch(() => '');
-      console.error(
-        `[analyze-snack] Gemini ${geminiRes.status} ${geminiRes.statusText}: ${errorText.slice(0, 500)}`
-      );
-      return {
-        status: 502,
-        body: { error: 'Gemini request failed', geminiStatus: geminiRes.status },
-      };
-    }
-
-    const data = await geminiRes.json();
-    const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-    if (!text) {
-      console.error('[analyze-snack] Gemini returned no text (safety block or empty candidate?)', JSON.stringify(data).slice(0, 500));
-      return { status: 502, body: { error: 'Gemini returned no usable content' } };
-    }
-    const parsed = JSON.parse(text);
-
-    return {
-      status: 200,
-      body: {
-        name: typeof parsed.name === 'string' ? parsed.name : '',
-        caloriesPerServing:
-          typeof parsed.caloriesPerServing === 'number' ? parsed.caloriesPerServing : null,
-        servingSizeLabel: typeof parsed.servingSizeLabel === 'string' ? parsed.servingSizeLabel : '',
+          },
+        ],
       },
-    };
-  } catch (err) {
-    console.error('[analyze-snack] Unexpected error', err);
-    return { status: 500, body: { error: 'Unexpected error analyzing image' } };
+    ],
+    generationConfig: { responseMimeType: 'application/json' },
+  };
+
+  let lastErrorText = '';
+  let lastStatus = 500;
+
+  for (const model of CANDIDATE_MODELS) {
+    try {
+      const geminiRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestPayload),
+        }
+      );
+
+      if (!geminiRes.ok) {
+        lastStatus = geminiRes.status;
+        lastErrorText = await geminiRes.text().catch(() => '');
+        console.warn(`[analyze-snack] Model ${model} failed (${geminiRes.status}): ${lastErrorText.slice(0, 300)}`);
+        continue;
+      }
+
+      const data = await geminiRes.json();
+      const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+      if (!text) {
+        console.warn(`[analyze-snack] Model ${model} returned no text`);
+        continue;
+      }
+
+      const parsed = JSON.parse(text);
+
+      const calories =
+        typeof parsed.caloriesPerServing === 'number'
+          ? parsed.caloriesPerServing
+          : typeof parsed.totalContentCalories === 'number'
+            ? parsed.totalContentCalories
+            : null;
+
+      return {
+        status: 200,
+        body: {
+          name: typeof parsed.name === 'string' ? parsed.name.trim() : '',
+          caloriesPerServing: calories,
+          servingSizeLabel: typeof parsed.servingSizeLabel === 'string' ? parsed.servingSizeLabel.trim() : '',
+          detectedType: typeof parsed.detectedType === 'string' ? parsed.detectedType : 'unknown',
+        },
+      };
+    } catch (err) {
+      console.warn(`[analyze-snack] Error with model ${model}:`, err);
+      lastErrorText = String(err);
+    }
   }
+
+  return {
+    status: 502,
+    body: {
+      error: 'Gemini request failed on all candidate models',
+      detail: lastErrorText.slice(0, 300),
+      geminiStatus: lastStatus,
+    },
+  };
 }
 
 export default async function handler(req: any, res: any) {

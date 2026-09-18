@@ -1,10 +1,12 @@
-import type { ExerciseRoutine } from '../types';
+import type { ExerciseRoutine, InProgressWorkout } from '../types';
 
 interface RoutineSuggestionsProps {
   routines: ExerciseRoutine[];
   isLoading: boolean;
+  inProgressWorkout?: InProgressWorkout | null;
   onBack: () => void;
   onSelect: (routine: ExerciseRoutine) => void;
+  onResumeInProgress?: () => void;
   onCompleteWithoutTimer: (routine: ExerciseRoutine) => void;
   onRetry: () => void;
 }
@@ -12,14 +14,16 @@ interface RoutineSuggestionsProps {
 export function RoutineSuggestions({
   routines,
   isLoading,
+  inProgressWorkout,
   onBack,
   onSelect,
+  onResumeInProgress,
   onCompleteWithoutTimer,
   onRetry,
 }: RoutineSuggestionsProps) {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-10 pt-6">
-      <div className="mb-5 flex items-center gap-3">
+      <div className="mb-4 flex items-center gap-3">
         <button
           type="button"
           onClick={onBack}
@@ -33,9 +37,25 @@ export function RoutineSuggestions({
         <h2 className="text-base font-bold text-charcoal">지금 할 수 있는 움직임 3가지</h2>
       </div>
 
-      <p className="mb-5 rounded-xl bg-lavender-soft px-3.5 py-2.5 text-xs leading-relaxed text-navy">
-        AI가 지금 상황(시간·장소·강도·소음·점프 가능 여부)에 맞춰 추천해요. 예상 소모 칼로리는
-        정확한 값이 아닌 참고용 범위이니, 체력·속도 등에 따라 개인차가 있을 수 있어요.
+      {/* 현재 진행/일시정지 중인 운동 안내 배너 */}
+      {inProgressWorkout && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-lavender bg-lavender-soft px-4 py-3">
+          <div>
+            <p className="text-[11px] font-semibold text-teal">일시정지된 움직임</p>
+            <p className="text-xs font-bold text-charcoal">{inProgressWorkout.routine.name}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onResumeInProgress}
+            className="rounded-xl bg-charcoal px-3 py-1.5 text-xs font-semibold text-ivory active:scale-95"
+          >
+            이어서 하기
+          </button>
+        </div>
+      )}
+
+      <p className="mb-4 rounded-xl bg-lavender-soft/60 px-3.5 py-2.5 text-xs leading-relaxed text-navy">
+        AI가 지금 상황에 맞춰 추천한 루틴입니다. 원하는 운동을 자유롭게 선택해 진행할 수 있어요.
       </p>
 
       {isLoading && routines.length === 0 && (
@@ -74,7 +94,11 @@ export function RoutineSuggestions({
               onClick={() => onSelect(routine)}
               className="btn-primary mt-4 w-full rounded-xl py-2.5 text-sm font-semibold text-white transition-transform active:scale-[0.98]"
             >
-              이 루틴 시작하기
+              {inProgressWorkout
+                ? inProgressWorkout.routine.id === routine.id
+                  ? '현재 루틴 이어서 하기'
+                  : '이 루틴으로 변경하기'
+                : '이 루틴 시작하기'}
             </button>
             <button
               type="button"

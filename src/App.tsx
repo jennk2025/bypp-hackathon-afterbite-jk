@@ -86,6 +86,8 @@ export default function App() {
           <RoutineSuggestions
             routines={workout.routines}
             isLoading={workout.isRecommendingRoutines}
+            inProgressWorkout={inProgress}
+            onResumeInProgress={() => setScreen('workout')}
             onBack={() => setScreen('tray')}
             onSelect={workout.handleRoutineSelect}
             onCompleteWithoutTimer={workout.completeRoutineWithoutTimer}
@@ -109,6 +111,7 @@ export default function App() {
             isRunning={inProgress.status === 'running'}
             currentStepIndex={inProgress.currentStepIndex}
             onPauseResume={workout.pauseResumeWorkout}
+            onBrowseRoutines={workout.pauseAndBrowseRoutines}
             onNextStep={workout.nextStep}
             onComplete={workout.completeWorkout}
             onCancel={workout.cancelWorkout}
@@ -142,23 +145,34 @@ export default function App() {
       {inProgress && (
         <div className="mt-6 flex items-center justify-between gap-3 rounded-2xl border border-lavender bg-lavender-soft px-4 py-3.5">
           <div>
-            <p className="text-xs font-semibold text-navy">이어서 할 움직임이 있어요</p>
+            <p className="text-xs font-semibold text-navy">
+              {inProgress.status === 'running' ? '진행 중인 움직임이 있어요' : '일시정지된 움직임이 있어요'}
+            </p>
             <p className="text-sm text-navy-soft">
               {inProgress.routine.name} · {formatMmSs(inProgress.elapsedSeconds)}
             </p>
           </div>
-          <div className="flex shrink-0 gap-2">
+          <div className="flex shrink-0 gap-1.5">
+            {workout.routines.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setScreen('routines')}
+                className="rounded-full border border-navy/15 bg-ivory-card px-2.5 py-1.5 text-xs font-medium text-navy-soft active:scale-95"
+              >
+                루틴 목록
+              </button>
+            )}
             <button
               type="button"
               onClick={workout.cancelWorkout}
-              className="rounded-full px-3 py-1.5 text-xs font-medium text-navy-soft"
+              className="rounded-full px-2.5 py-1.5 text-xs font-medium text-navy-soft active:scale-95"
             >
-              취소하기
+              취소
             </button>
             <button
               type="button"
               onClick={() => setScreen('workout')}
-              className="rounded-full bg-charcoal px-3.5 py-1.5 text-xs font-semibold text-ivory"
+              className="rounded-full bg-charcoal px-3 py-1.5 text-xs font-semibold text-ivory active:scale-95"
             >
               이어하기
             </button>
@@ -224,7 +238,7 @@ export default function App() {
             key={snack.id}
             snack={snack}
             selected={tray.selectedIds.has(snack.id)}
-            selectable={snack.exerciseStatus === 'none'}
+            selectable={snack.remainingCalories > 0}
             onToggleSelect={tray.toggleSelect}
             onEdit={(id) => setModal({ type: 'edit', snackId: id })}
             onDelete={tray.deleteSnack}

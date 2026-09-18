@@ -26,9 +26,19 @@ export function SnackCard({ snack, selected, selectable, onToggleSelect, onEdit,
   // 움직임을 일부만 완료해서 아직 못 태운 칼로리가 남아있는 상태 — 완료는 아니지만
   // '아직 안 바꿈'과는 구분해서 보여줍니다. 이만큼만 다시 선택해서 움직일 수 있어요.
   const isPartiallyBurned =
-    snack.exerciseStatus === 'none' && snack.remainingCalories < snack.totalCalories - 0.5;
-  const statusLabel = isPartiallyBurned ? '일부 움직임 완료' : STATUS_LABEL[snack.exerciseStatus];
-  const statusStyle = isPartiallyBurned ? 'bg-aqua/15 text-aqua' : STATUS_STYLE[snack.exerciseStatus];
+    snack.remainingCalories < snack.totalCalories - 0.5 && snack.remainingCalories > 0;
+  const statusLabel =
+    snack.remainingCalories <= 0
+      ? '소모 완료 🎉'
+      : isPartiallyBurned
+        ? '일부 소모됨'
+        : STATUS_LABEL[snack.exerciseStatus];
+  const statusStyle =
+    snack.remainingCalories <= 0
+      ? 'bg-teal/15 text-teal'
+      : isPartiallyBurned
+        ? 'bg-aqua/15 text-aqua'
+        : STATUS_STYLE[snack.exerciseStatus];
 
   return (
     <div

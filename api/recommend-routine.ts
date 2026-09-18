@@ -1,12 +1,7 @@
 // Vercel 서버리스 함수 (Node.js 런타임)로 배포됩니다.
 // Gemini API 키는 여기(서버 쪽 환경변수)에만 존재하며 브라우저로 절대 전달되지 않습니다.
-//
-// 실제 로직은 runRecommendRoutine()에 있고, 아래 default export는 그걸 Vercel의
-// (req, res) 시그니처로 감싸는 얇은 어댑터입니다. vite-plugins/apiDevServer.ts가
-// `npm run dev` 중에도 runRecommendRoutine()을 그대로 불러 써서, 로컬에서도 실제
-// Gemini 연동 코드를 그대로 태워볼 수 있습니다.
 
-const GEMINI_MODEL = 'gemini-2.0-flash';
+const CANDIDATE_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash'];
 
 const PLACE_LABEL: Record<string, string> = {
   narrow_indoor: '좁은 실내(방 한 칸 정도)',
@@ -61,10 +56,20 @@ export interface ApiResult {
   body: Record<string, unknown>;
 }
 
-export async function runRecommendRoutine(body: any): Promise<ApiResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
+export async function runRecommendRoutine(rawBody: any): Promise<ApiResult> {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
-    return { status: 500, body: { error: 'Server not configured' } };
+    console.error('[recommend-routine] GEMINI_API_KEY is missing from environment variables');
+    return { status: 500, body: { error: 'Server not configured (API key missing)' } };
+  }
+
+  let body: any = rawBody;
+  if (typeof rawBody === 'string') {
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return { status: 400, body: { error: 'Invalid JSON body' } };
+    }
   }
 
   const { minutes, place, intensity, noiseOk, jumpOk, totalCalories } = body ?? {};
@@ -72,80 +77,88 @@ export async function runRecommendRoutine(body: any): Promise<ApiResult> {
     return { status: 400, body: { error: 'minutes, place, intensity required' } };
   }
 
-  try {
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+  const promptText = buildPrompt({
+    minutes,
+    place,
+    intensity,
+    noiseOk: Boolean(noiseOk),
+    jumpOk: Boolean(jumpOk),
+    totalCalories: typeof totalCalories === 'number' ? totalCalories : 0,
+  });
+
+  const requestPayload = {
+    contents: [
       {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: buildPrompt({
-                    minutes,
-                    place,
-                    intensity,
-                    noiseOk: Boolean(noiseOk),
-                    jumpOk: Boolean(jumpOk),
-                    totalCalories: typeof totalCalories === 'number' ? totalCalories : 0,
-                  }),
-                },
-              ],
-            },
-          ],
-          generationConfig: { responseMimeType: 'application/json' },
-        }),
+        parts: [{ text: promptText }],
+      },
+    ],
+    generationConfig: { responseMimeType: 'application/json' },
+  };
+
+  let lastErrorText = '';
+  let lastStatus = 500;
+
+  for (const model of CANDIDATE_MODELS) {
+    try {
+      const geminiRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestPayload),
+        }
+      );
+
+      if (!geminiRes.ok) {
+        lastStatus = geminiRes.status;
+        lastErrorText = await geminiRes.text().catch(() => '');
+        console.warn(`[recommend-routine] Model ${model} failed (${geminiRes.status}): ${lastErrorText.slice(0, 300)}`);
+        continue;
       }
-    );
 
-    if (!geminiRes.ok) {
-      // Vercel 함수 로그(대시보드 > 프로젝트 > Deployments > 함수 로그)에서 실제 원인을
-      // 확인할 수 있도록 남깁니다. 흔한 원인: 키 오타/무효, Generative Language API
-      // 미활성화, 해당 리전/모델 접근 불가, 쿼터 초과 등.
-      const errorText = await geminiRes.text().catch(() => '');
-      console.error(
-        `[recommend-routine] Gemini ${geminiRes.status} ${geminiRes.statusText}: ${errorText.slice(0, 500)}`
-      );
-      return {
-        status: 502,
-        body: { error: 'Gemini request failed', geminiStatus: geminiRes.status },
-      };
+      const data = await geminiRes.json();
+      let text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+      if (!text) {
+        console.warn(`[recommend-routine] Model ${model} returned empty content`);
+        continue;
+      }
+
+      // JSON 앞뒤에 혹시 붙은 마크다운 코드블록 제거
+      text = text.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```$/, '').trim();
+
+      const parsed = JSON.parse(text);
+      const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.routines) ? parsed.routines : null;
+      if (!list) {
+        console.warn('[recommend-routine] Unexpected Gemini response shape', text.slice(0, 300));
+        continue;
+      }
+
+      const routines = list
+        .filter((r: any) => r && typeof r.name === 'string' && Array.isArray(r.steps))
+        .map((r: any) => ({
+          name: r.name,
+          durationMinutes: typeof r.durationMinutes === 'number' ? r.durationMinutes : minutes,
+          estBurnLowKcal: typeof r.estBurnLowKcal === 'number' ? r.estBurnLowKcal : 0,
+          estBurnHighKcal: typeof r.estBurnHighKcal === 'number' ? r.estBurnHighKcal : 0,
+          steps: r.steps.filter((s: unknown) => typeof s === 'string').slice(0, 4),
+        }))
+        .slice(0, 3);
+
+      return { status: 200, body: { routines } };
+    } catch (err) {
+      console.warn(`[recommend-routine] Error with model ${model}:`, err);
+      lastErrorText = String(err);
     }
-
-    const data = await geminiRes.json();
-    const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-    if (!text) {
-      console.error(
-        '[recommend-routine] Gemini returned no text (safety block or empty candidate?)',
-        JSON.stringify(data).slice(0, 500)
-      );
-      return { status: 502, body: { error: 'Gemini returned no usable content' } };
-    }
-    const parsed = JSON.parse(text);
-    const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.routines) ? parsed.routines : null;
-    if (!list) {
-      console.error('[recommend-routine] Unexpected Gemini response shape', text.slice(0, 500));
-      return { status: 502, body: { error: 'Unexpected Gemini response shape' } };
-    }
-
-    const routines = list
-      .filter((r: any) => r && typeof r.name === 'string' && Array.isArray(r.steps))
-      .map((r: any) => ({
-        name: r.name,
-        durationMinutes: typeof r.durationMinutes === 'number' ? r.durationMinutes : minutes,
-        estBurnLowKcal: typeof r.estBurnLowKcal === 'number' ? r.estBurnLowKcal : 0,
-        estBurnHighKcal: typeof r.estBurnHighKcal === 'number' ? r.estBurnHighKcal : 0,
-        steps: r.steps.filter((s: unknown) => typeof s === 'string').slice(0, 4),
-      }))
-      .slice(0, 3);
-
-    return { status: 200, body: { routines } };
-  } catch (err) {
-    console.error('[recommend-routine] Unexpected error', err);
-    return { status: 500, body: { error: 'Unexpected error recommending routines' } };
   }
+
+  return {
+    status: 502,
+    body: {
+      error: 'Gemini request failed on all candidate models',
+      detail: lastErrorText.slice(0, 300),
+      geminiStatus: lastStatus,
+    },
+  };
 }
 
 export default async function handler(req: any, res: any) {

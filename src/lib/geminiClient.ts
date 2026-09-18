@@ -1,6 +1,4 @@
-// snackVision.ts와 routineVision.ts가 공유하는 "Vercel 서버리스 함수(Gemini 프록시)를
-// 타임아웃과 함께 호출하고, 실패하면 조용히 null을 돌려주는" 공통 로직입니다.
-// 실패 시 각 호출부가 자기 방식(로컬 OCR, 규칙 기반 추천 등)으로 대체합니다.
+// snackVision.ts와 routineVision.ts가 공유하는 Gemini 서버리스 프록시 호출 클라이언트
 
 interface FetchGeminiJsonOptions {
   path: string;
@@ -11,7 +9,7 @@ interface FetchGeminiJsonOptions {
 export async function fetchGeminiJson<T>({
   path,
   body,
-  timeoutMs = 15000,
+  timeoutMs = 25000,
 }: FetchGeminiJsonOptions): Promise<T | null> {
   try {
     const controller = new AbortController();
@@ -25,9 +23,18 @@ export async function fetchGeminiJson<T>({
     });
     clearTimeout(timeoutId);
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      const errText = await response.text().catch(() => '');
+      console.warn(`[fetchGeminiJson] Request to ${path} failed with HTTP ${response.status}:`, errText.slice(0, 400));
+      return null;
+    }
     return (await response.json()) as T;
-  } catch {
+  } catch (err: any) {
+    if (err?.name === 'AbortError') {
+      console.warn(`[fetchGeminiJson] Request to ${path} timed out after ${timeoutMs}ms`);
+    } else {
+      console.warn(`[fetchGeminiJson] Network or parsing error requesting ${path}:`, err);
+    }
     return null;
   }
 }

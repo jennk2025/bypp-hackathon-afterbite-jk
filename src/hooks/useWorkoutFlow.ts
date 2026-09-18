@@ -107,11 +107,19 @@ export function useWorkoutFlow({
   }
 
   function handleRoutineSelect(routine: ExerciseRoutine) {
-    const snackIds = Array.from(selectedIds);
     setState((prev) => {
-      const snackRemainingSnapshot = Object.fromEntries(
-        snackIds.map((id) => [id, prev.snacks.find((s) => s.id === id)?.remainingCalories ?? 0])
-      );
+      let snackIds = Array.from(selectedIds);
+      let snackRemainingSnapshot: Record<string, number> = {};
+
+      if (snackIds.length === 0 && prev.inProgressWorkout) {
+        snackIds = prev.inProgressWorkout.snackIds;
+        snackRemainingSnapshot = prev.inProgressWorkout.snackRemainingSnapshot;
+      } else {
+        snackRemainingSnapshot = Object.fromEntries(
+          snackIds.map((id) => [id, prev.snacks.find((s) => s.id === id)?.remainingCalories ?? 0])
+        );
+      }
+
       return {
         ...prev,
         snacks: prev.snacks.map((s) => (snackIds.includes(s.id) ? { ...s, exerciseStatus: 'in_progress' } : s)),
@@ -128,6 +136,21 @@ export function useWorkoutFlow({
     });
     clearSelection();
     setScreen('workout');
+  }
+
+  function pauseAndBrowseRoutines() {
+    setState((prev) =>
+      prev.inProgressWorkout
+        ? {
+            ...prev,
+            inProgressWorkout: {
+              ...prev.inProgressWorkout,
+              status: 'paused',
+            },
+          }
+        : prev
+    );
+    setScreen('routines');
   }
 
   function pauseResumeWorkout() {
@@ -248,6 +271,7 @@ export function useWorkoutFlow({
     handleRoutineSelect,
     completeRoutineWithoutTimer,
     pauseResumeWorkout,
+    pauseAndBrowseRoutines,
     nextStep,
     completeWorkout,
     cancelWorkout,
