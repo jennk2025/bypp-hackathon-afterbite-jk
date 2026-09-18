@@ -101,14 +101,32 @@ export async function runRecommendRoutine(body: any): Promise<ApiResult> {
     );
 
     if (!geminiRes.ok) {
-      return { status: 502, body: { error: 'Gemini request failed' } };
+      // Vercel 함수 로그(대시보드 > 프로젝트 > Deployments > 함수 로그)에서 실제 원인을
+      // 확인할 수 있도록 남깁니다. 흔한 원인: 키 오타/무효, Generative Language API
+      // 미활성화, 해당 리전/모델 접근 불가, 쿼터 초과 등.
+      const errorText = await geminiRes.text().catch(() => '');
+      console.error(
+        `[recommend-routine] Gemini ${geminiRes.status} ${geminiRes.statusText}: ${errorText.slice(0, 500)}`
+      );
+      return {
+        status: 502,
+        body: { error: 'Gemini request failed', geminiStatus: geminiRes.status },
+      };
     }
 
     const data = await geminiRes.json();
     const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    if (!text) {
+      console.error(
+        '[recommend-routine] Gemini returned no text (safety block or empty candidate?)',
+        JSON.stringify(data).slice(0, 500)
+      );
+      return { status: 502, body: { error: 'Gemini returned no usable content' } };
+    }
     const parsed = JSON.parse(text);
     const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.routines) ? parsed.routines : null;
     if (!list) {
+      console.error('[recommend-routine] Unexpected Gemini response shape', text.slice(0, 500));
       return { status: 502, body: { error: 'Unexpected Gemini response shape' } };
     }
 
@@ -124,7 +142,8 @@ export async function runRecommendRoutine(body: any): Promise<ApiResult> {
       .slice(0, 3);
 
     return { status: 200, body: { routines } };
-  } catch {
+  } catch (err) {
+    console.error('[recommend-routine] Unexpected error', err);
     return { status: 500, body: { error: 'Unexpected error recommending routines' } };
   }
 }
