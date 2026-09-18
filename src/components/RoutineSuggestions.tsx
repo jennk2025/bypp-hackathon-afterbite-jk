@@ -2,11 +2,13 @@ import type { ExerciseRoutine } from '../types';
 
 interface RoutineSuggestionsProps {
   routines: ExerciseRoutine[];
+  isLoading: boolean;
   onBack: () => void;
   onSelect: (routine: ExerciseRoutine) => void;
+  onRetry: () => void;
 }
 
-export function RoutineSuggestions({ routines, onBack, onSelect }: RoutineSuggestionsProps) {
+export function RoutineSuggestions({ routines, isLoading, onBack, onSelect, onRetry }: RoutineSuggestionsProps) {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-10 pt-6">
       <div className="mb-5 flex items-center gap-3">
@@ -24,9 +26,16 @@ export function RoutineSuggestions({ routines, onBack, onSelect }: RoutineSugges
       </div>
 
       <p className="mb-5 rounded-xl bg-lavender-soft px-3.5 py-2.5 text-xs leading-relaxed text-navy">
-        예상 소모 칼로리는 정확한 값이 아닌 참고용 범위예요. 체력·속도 등에 따라 개인차가 있을 수
-        있어요.
+        AI가 지금 상황(시간·장소·강도·소음·점프 가능 여부)에 맞춰 추천해요. 예상 소모 칼로리는
+        정확한 값이 아닌 참고용 범위이니, 체력·속도 등에 따라 개인차가 있을 수 있어요.
       </p>
+
+      {isLoading && routines.length === 0 && (
+        <div className="flex flex-col items-center gap-3 py-14 text-center">
+          <span className="h-6 w-6 animate-spin rounded-full border-2 border-teal border-t-transparent" />
+          <p className="text-sm text-navy-soft">AI가 지금 상황에 맞는 움직임을 찾고 있어요...</p>
+        </div>
+      )}
 
       <div className="flex flex-col gap-3.5">
         {routines.map((routine) => (
@@ -62,6 +71,17 @@ export function RoutineSuggestions({ routines, onBack, onSelect }: RoutineSugges
           </div>
         ))}
       </div>
+
+      {routines.length > 0 && !isLoading && (
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-navy/15 py-3 text-sm font-medium text-navy-soft transition-colors active:scale-[0.98]"
+        >
+          <span aria-hidden="true">🔄</span>
+          마음에 안 들면 다시 추천받기
+        </button>
+      )}
     </div>
   );
 }

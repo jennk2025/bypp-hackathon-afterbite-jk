@@ -13,10 +13,34 @@ export function loadState(): AppState {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState;
     const parsed = JSON.parse(raw) as Partial<AppState>;
+    // 예전 버전 데이터엔 remainingCalories가 없을 수 있어, 상태에 맞게 채워줍니다.
+    const snacks = (parsed.snacks ?? []).map((s) => ({
+      ...s,
+      remainingCalories:
+        typeof s.remainingCalories === 'number'
+          ? s.remainingCalories
+          : s.exerciseStatus === 'completed'
+            ? 0
+            : s.totalCalories,
+    }));
+
+    const inProgressWorkout = parsed.inProgressWorkout ?? null;
+    if (inProgressWorkout && !inProgressWorkout.snackRemainingSnapshot) {
+      inProgressWorkout.snackRemainingSnapshot = Object.fromEntries(
+        inProgressWorkout.snackIds.map((id) => [
+          id,
+          snacks.find((s) => s.id === id)?.remainingCalories ?? 0,
+        ])
+      );
+    }
+
     return {
-      snacks: parsed.snacks ?? [],
-      completedWorkouts: parsed.completedWorkouts ?? [],
-      inProgressWorkout: parsed.inProgressWorkout ?? null,
+      snacks,
+      completedWorkouts: (parsed.completedWorkouts ?? []).map((w) => ({
+        ...w,
+        snackRemainingSnapshot: w.snackRemainingSnapshot ?? {},
+      })),
+      inProgressWorkout,
     };
   } catch {
     return defaultState;

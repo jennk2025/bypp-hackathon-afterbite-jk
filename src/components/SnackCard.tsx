@@ -23,6 +23,13 @@ const STATUS_STYLE: Record<Snack['exerciseStatus'], string> = {
 };
 
 export function SnackCard({ snack, selected, selectable, onToggleSelect, onEdit, onDelete }: SnackCardProps) {
+  // 움직임을 일부만 완료해서 아직 못 태운 칼로리가 남아있는 상태 — 완료는 아니지만
+  // '아직 안 바꿈'과는 구분해서 보여줍니다. 이만큼만 다시 선택해서 움직일 수 있어요.
+  const isPartiallyBurned =
+    snack.exerciseStatus === 'none' && snack.remainingCalories < snack.totalCalories - 0.5;
+  const statusLabel = isPartiallyBurned ? '일부 움직임 완료' : STATUS_LABEL[snack.exerciseStatus];
+  const statusStyle = isPartiallyBurned ? 'bg-aqua/15 text-aqua' : STATUS_STYLE[snack.exerciseStatus];
+
   return (
     <div
       className={`relative rounded-2xl border bg-ivory-card px-4 py-3.5 shadow-sm transition-all duration-300 ${
@@ -57,8 +64,8 @@ export function SnackCard({ snack, selected, selectable, onToggleSelect, onEdit,
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <h3 className="truncate text-[15px] font-semibold text-charcoal">{snack.name}</h3>
-            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_STYLE[snack.exerciseStatus]}`}>
-              {STATUS_LABEL[snack.exerciseStatus]}
+            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${statusStyle}`}>
+              {statusLabel}
             </span>
           </div>
           <p className="mt-0.5 text-xs text-navy-soft">
@@ -68,10 +75,19 @@ export function SnackCard({ snack, selected, selectable, onToggleSelect, onEdit,
           <div className="my-2 border-t border-dashed border-navy/15" />
 
           <div className="flex items-end justify-between">
-            <span className="text-2xl font-bold text-charcoal">
-              {Math.round(snack.totalCalories)}
-              <span className="ml-0.5 text-sm font-semibold text-navy-soft">kcal</span>
-            </span>
+            <div>
+              <span className="text-2xl font-bold text-charcoal">
+                {Math.round(isPartiallyBurned ? snack.remainingCalories : snack.totalCalories)}
+                <span className="ml-0.5 text-sm font-semibold text-navy-soft">
+                  kcal{isPartiallyBurned ? ' 남음' : ''}
+                </span>
+              </span>
+              {isPartiallyBurned && (
+                <p className="mt-0.5 text-[11px] text-navy-soft">
+                  전체 {Math.round(snack.totalCalories)}kcal 중
+                </p>
+              )}
+            </div>
             <div className="flex items-center gap-1">
               <button
                 type="button"

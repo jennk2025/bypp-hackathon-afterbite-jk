@@ -9,7 +9,7 @@ import { RoutineSuggestions } from './components/RoutineSuggestions';
 import { WorkoutTimer } from './components/WorkoutTimer';
 import { loadState, saveState } from './lib/storage';
 import { generateId } from './lib/id';
-import { generateRoutines } from './lib/routineGenerator';
+import { recommendRoutines } from './lib/routineVision';
 import type { AppState, ExerciseRoutine, MoveConditions, Snack } from './types';
 
 type Screen = 'tray' | 'conditions' | 'routines' | 'workout';
@@ -27,6 +27,8 @@ export default function App() {
   const [modal, setModal] = useState<ModalState>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [routines, setRoutines] = useState<ExerciseRoutine[]>([]);
+  const [isRecommendingRoutines, setIsRecommendingRoutines] = useState(false);
+  const [lastConditions, setLastConditions] = useState<MoveConditions | null>(null);
   const [justCompletedId, setJustCompletedId] = useState<string | null>(null);
   const [character, setCharacter] = useState<RunnerCharacter>(
     () => (localStorage.getItem('afterbite_character') as RunnerCharacter) || 'male'
@@ -81,7 +83,7 @@ export default function App() {
   const allSelected = selectableSnacks.length > 0 && selectableSnacks.every((s) => selectedIds.has(s.id));
   const selectedTotalCalories = state.snacks
     .filter((s) => selectedIds.has(s.id))
-    .reduce((sum, s) => sum + s.totalCalories, 0);
+    .reduce((sum, s) => sum + s.remainingCalories, 0);
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
@@ -97,6 +99,7 @@ export default function App() {
   }
 
   function addSnack(input: SnackFormInput) {
+    const totalCalories = input.caloriesPerServing * input.portionMultiplier;
     const snack: Snack = {
       id: generateId(),
       name: input.name,
@@ -104,7 +107,8 @@ export default function App() {
       servingSizeLabel: input.servingSizeLabel,
       portionMultiplier: input.portionMultiplier,
       portionLabel: input.portionLabel,
-      totalCalories: input.caloriesPerServing * input.portionMultiplier,
+      totalCalories,
+      remainingCalories: totalCalories,
       addedAt: new Date().toISOString(),
       source: input.source,
       exerciseStatus: 'none',
@@ -116,20 +120,22 @@ export default function App() {
   function editSnack(id: string, input: SnackFormInput) {
     setState((prev) => ({
       ...prev,
-      snacks: prev.snacks.map((s) =>
-        s.id === id
-          ? {
-              ...s,
-              name: input.name,
-              caloriesPerServing: input.caloriesPerServing,
-              servingSizeLabel: input.servingSizeLabel,
-              portionMultiplier: input.portionMultiplier,
-              portionLabel: input.portionLabel,
-              totalCalories: input.caloriesPerServing * input.portionMultiplier,
-              source: input.source,
-            }
-          : s
-      ),
+      snacks: prev.snacks.map((s) => {
+        if (s.id !== id) return s;
+        const totalCalories = input.caloriesPerServing * input.portionMultiplier;
+        return {
+          ...s,
+          name: input.name,
+          caloriesPerServing: input.caloriesPerServing,
+          servingSizeLabel: input.servingSizeLabel,
+          portionMultiplier: input.portionMultiplier,
+          portionLabel: input.portionLabel,
+          totalCalories,
+          // 이미 일부 움직임으로 소모한 만큼은 유지하되, 줄어든 총 칼로리보다 많이 남을 순 없게 합니다.
+          remainingCalories: Math.min(s.remainingCalories, totalCalories),
+          source: input.source,
+        };
+      }),
     }));
     setModal(null);
   }
@@ -147,25 +153,44 @@ export default function App() {
     setScreen('conditions');
   }
 
-  function handleConditionsSubmit(cond: MoveConditions) {
-    setRoutines(generateRoutines(cond));
+  async function fetchRoutines(cond: MoveConditions) {
+    setIsRecommendingRoutines(true);
+    setRoutines([]);
+    const result = await recommendRoutines(cond, selectedTotalCalories);
+    setRoutines(result);
+    setIsRecommendingRoutines(false);
+  }
+
+  async function handleConditionsSubmit(cond: MoveConditions) {
+    setLastConditions(cond);
     setScreen('routines');
+    await fetchRoutines(cond);
+  }
+
+  function handleRetryRoutines() {
+    if (lastConditions) fetchRoutines(lastConditions);
   }
 
   function handleRoutineSelect(routine: ExerciseRoutine) {
     const snackIds = Array.from(selectedIds);
-    setState((prev) => ({
-      ...prev,
-      snacks: prev.snacks.map((s) => (snackIds.includes(s.id) ? { ...s, exerciseStatus: 'in_progress' } : s)),
-      inProgressWorkout: {
-        routine,
-        snackIds,
-        elapsedSeconds: 0,
-        status: 'running',
-        currentStepIndex: 0,
-        savedAt: new Date().toISOString(),
-      },
-    }));
+    setState((prev) => {
+      const snackRemainingSnapshot = Object.fromEntries(
+        snackIds.map((id) => [id, prev.snacks.find((s) => s.id === id)?.remainingCalories ?? 0])
+      );
+      return {
+        ...prev,
+        snacks: prev.snacks.map((s) => (snackIds.includes(s.id) ? { ...s, exerciseStatus: 'in_progress' } : s)),
+        inProgressWorkout: {
+          routine,
+          snackIds,
+          snackRemainingSnapshot,
+          elapsedSeconds: 0,
+          status: 'running',
+          currentStepIndex: 0,
+          savedAt: new Date().toISOString(),
+        },
+      };
+    });
     setSelectedIds(new Set());
     setScreen('workout');
   }
@@ -201,18 +226,38 @@ export default function App() {
   function completeWorkout() {
     setState((prev) => {
       if (!prev.inProgressWorkout) return prev;
-      const { routine, snackIds } = prev.inProgressWorkout;
+      const { routine, snackIds, snackRemainingSnapshot } = prev.inProgressWorkout;
       const recordId = generateId();
       setJustCompletedId(recordId);
+
+      // 태운 칼로리(중간값)를 선택된 간식 순서대로 다 채울 때까지 나눠 차감합니다.
+      // 다 태우지 못한 간식은 완료 처리하지 않고, 남은 만큼만 줄여 다시 선택할 수 있게 둡니다.
+      let remainingBurn = (routine.estBurnLowKcal + routine.estBurnHighKcal) / 2;
+      const snacks = prev.snacks.map((s) => {
+        if (!snackIds.includes(s.id)) return s;
+        const before = snackRemainingSnapshot[s.id] ?? s.remainingCalories;
+        if (remainingBurn <= 0) {
+          return { ...s, exerciseStatus: 'none' as const, remainingCalories: before };
+        }
+        if (remainingBurn >= before) {
+          remainingBurn -= before;
+          return { ...s, exerciseStatus: 'completed' as const, remainingCalories: 0 };
+        }
+        const after = before - remainingBurn;
+        remainingBurn = 0;
+        return { ...s, exerciseStatus: 'none' as const, remainingCalories: after };
+      });
+
       return {
         ...prev,
-        snacks: prev.snacks.map((s) => (snackIds.includes(s.id) ? { ...s, exerciseStatus: 'completed' } : s)),
+        snacks,
         completedWorkouts: [
           ...prev.completedWorkouts,
           {
             id: recordId,
             routineName: routine.name,
             snackIds,
+            snackRemainingSnapshot,
             burnedLowKcal: routine.estBurnLowKcal,
             burnedHighKcal: routine.estBurnHighKcal,
             completedAt: new Date().toISOString(),
@@ -243,7 +288,15 @@ export default function App() {
       if (!last || last.id !== justCompletedId) return prev;
       return {
         ...prev,
-        snacks: prev.snacks.map((s) => (last.snackIds.includes(s.id) ? { ...s, exerciseStatus: 'none' } : s)),
+        snacks: prev.snacks.map((s) =>
+          last.snackIds.includes(s.id)
+            ? {
+                ...s,
+                exerciseStatus: 'none',
+                remainingCalories: last.snackRemainingSnapshot[s.id] ?? s.remainingCalories,
+              }
+            : s
+        ),
         completedWorkouts: prev.completedWorkouts.slice(0, -1),
       };
     });
@@ -278,7 +331,13 @@ export default function App() {
         <div className="bg-decor-spot" aria-hidden="true" />
         <AppHeader />
         <div className="pt-14">
-          <RoutineSuggestions routines={routines} onBack={() => setScreen('tray')} onSelect={handleRoutineSelect} />
+          <RoutineSuggestions
+            routines={routines}
+            isLoading={isRecommendingRoutines}
+            onBack={() => setScreen('tray')}
+            onSelect={handleRoutineSelect}
+            onRetry={handleRetryRoutines}
+          />
         </div>
       </>
     );
