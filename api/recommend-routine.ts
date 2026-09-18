@@ -1,6 +1,4 @@
-// Vercel 서버리스 함수 (Node.js 런타임)로 배포됩니다.
-// Gemini API 키는 여기(서버 쪽 환경변수)에만 존재하며 브라우저로 절대 전달되지 않습니다.
-
+// Vercel 서버리스 함수 (Node.js 런타임)
 const CANDIDATE_MODELS = ['gemini-1.5-flash', 'gemini-1.5-flash-8b'];
 
 const PLACE_LABEL: Record<string, string> = {
@@ -35,20 +33,10 @@ function buildPrompt(body: {
 - 원하는 강도: ${intensityLabel}
 - 소리를 내도 되는지: ${body.noiseOk ? '괜찮음' : '조용해야 함(이웃 등 고려, 점프·쿵쿵거리는 동작 피하기)'}
 - 점프 동작 가능 여부: ${body.jumpOk ? '가능' : '불가능(무릎 부담 등으로 점프 없는 동작만)'}
-- 참고용 목표 칼로리: 약 ${Math.round(body.totalCalories)}kcal (정확히 맞출 필요는 없고, 주어진 시간 안에서 현실적인 범위로만 추정)
+- 참고용 목표 칼로리: 약 ${Math.round(body.totalCalories)}kcal (정확히 맞출 필요는 없고, 주어진 시간 안에서 현실적인 범위로 추정)
 
-아래 JSON 배열 형식으로만 답하세요. 다른 설명, 마크다운, 코드블록 없이 순수 JSON만 답하세요.
-[
-  {
-    "name": "루틴 이름(간결하게, 10자 내외)",
-    "durationMinutes": 숫자,
-    "estBurnLowKcal": 숫자,
-    "estBurnHighKcal": 숫자,
-    "steps": ["동작 설명1", "동작 설명2", "동작 설명3"]
-  }
-]
-정확히 3개를 답하고, 반드시 주어진 장소·소음·점프 조건을 지키는 동작만 추천하세요.
-estBurnLowKcal은 estBurnHighKcal보다 작거나 같아야 하고, 두 값 모두 0보다 커야 합니다.`;
+정확히 3개의 루틴을 만들어주세요. 소음과 점프 조건을 반드시 지켜주세요.
+estBurnLowKcal은 estBurnHighKcal보다 작거나 같아야 합니다.`;
 }
 
 export interface ApiResult {
@@ -59,8 +47,7 @@ export interface ApiResult {
 export async function runRecommendRoutine(rawBody: any): Promise<ApiResult> {
   const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
-    console.error('[recommend-routine] GEMINI_API_KEY is missing from environment variables');
-    return { status: 500, body: { error: 'Server not configured (API key missing)' } };
+    return { status: 500, body: { error: 'API 키가 설정되지 않았습니다.' } };
   }
 
   let body: any = rawBody;
@@ -68,31 +55,52 @@ export async function runRecommendRoutine(rawBody: any): Promise<ApiResult> {
     try {
       body = JSON.parse(rawBody);
     } catch {
-      return { status: 400, body: { error: 'Invalid JSON body' } };
+      return { status: 400, body: { error: '잘못된 JSON 형식입니다.' } };
     }
   }
 
-  const { minutes, place, intensity, noiseOk, jumpOk, totalCalories } = body ?? {};
-  if (typeof minutes !== 'number' || typeof place !== 'string' || typeof intensity !== 'string') {
-    return { status: 400, body: { error: 'minutes, place, intensity required' } };
+  // 💡 수정 1: 프론트엔드에서 넘어오는 값이 문자열일 경우를 대비해 Number()로 강제 형변환
+  const minutes = Number(body?.minutes);
+  const place = body?.place;
+  const intensity = body?.intensity;
+  
+  if (isNaN(minutes) || typeof place !== 'string' || typeof intensity !== 'string') {
+    return { status: 400, body: { error: 'minutes, place, intensity 값이 올바르지 않습니다.' } };
   }
 
   const promptText = buildPrompt({
     minutes,
     place,
     intensity,
-    noiseOk: Boolean(noiseOk),
-    jumpOk: Boolean(jumpOk),
-    totalCalories: typeof totalCalories === 'number' ? totalCalories : 0,
+    noiseOk: Boolean(body?.noiseOk),
+    jumpOk: Boolean(body?.jumpOk),
+    totalCalories: Number(body?.totalCalories) || 0,
   });
 
+  // 💡 수정 2: Gemini 1.5가 무조건 올바른 형식의 JSON만 응답하도록 스키마(Schema) 정의
   const requestPayload = {
-    contents: [
-      {
-        parts: [{ text: promptText }],
-      },
-    ],
-    generationConfig: { responseMimeType: 'application/json' },
+    contents: [{ parts: [{ text: promptText }] }],
+    generationConfig: { 
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: "ARRAY",
+        items: {
+          type: "OBJECT",
+          properties: {
+            name: { type: "STRING", description: "루틴 이름(간결하게, 10자 내외)" },
+            durationMinutes: { type: "INTEGER" },
+            estBurnLowKcal: { type: "INTEGER" },
+            estBurnHighKcal: { type: "INTEGER" },
+            steps: { 
+              type: "ARRAY", 
+              items: { type: "STRING" },
+              description: "동작 설명들"
+            }
+          },
+          required: ["name", "durationMinutes", "estBurnLowKcal", "estBurnHighKcal", "steps"]
+        }
+      }
+    },
   };
 
   let lastErrorText = '';
@@ -112,26 +120,22 @@ export async function runRecommendRoutine(rawBody: any): Promise<ApiResult> {
       if (!geminiRes.ok) {
         lastStatus = geminiRes.status;
         lastErrorText = await geminiRes.text().catch(() => '');
-        console.warn(`[recommend-routine] Model ${model} failed (${geminiRes.status}): ${lastErrorText.slice(0, 300)}`);
+        console.warn(`[recommend-routine] Model ${model} failed (${geminiRes.status}):`, lastErrorText);
         continue;
       }
 
       const data = await geminiRes.json();
       let text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-      if (!text) {
-        console.warn(`[recommend-routine] Model ${model} returned empty content`);
-        continue;
-      }
+      
+      if (!text) continue;
 
-      // JSON 앞뒤에 혹시 붙은 마크다운 코드블록 제거
-      text = text.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```$/, '').trim();
+      // 💡 수정 3: 마크다운 제거 로직 강화 (문서 중간에 있어도 제거되도록 변경)
+      text = text.replace(/```json/gi, '').replace(/```/g, '').trim();
 
       const parsed = JSON.parse(text);
       const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.routines) ? parsed.routines : null;
-      if (!list) {
-        console.warn('[recommend-routine] Unexpected Gemini response shape', text.slice(0, 300));
-        continue;
-      }
+      
+      if (!list) throw new Error("배열 형태의 JSON이 아닙니다.");
 
       const routines = list
         .filter((r: any) => r && typeof r.name === 'string' && Array.isArray(r.steps))
@@ -154,7 +158,7 @@ export async function runRecommendRoutine(rawBody: any): Promise<ApiResult> {
   return {
     status: 502,
     body: {
-      error: 'Gemini request failed on all candidate models',
+      error: '모든 모델에서 응답 처리에 실패했습니다.',
       detail: lastErrorText.slice(0, 300),
       geminiStatus: lastStatus,
     },
@@ -163,9 +167,8 @@ export async function runRecommendRoutine(rawBody: any): Promise<ApiResult> {
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
-    return;
+    return res.status(405).json({ error: 'Method not allowed' });
   }
   const result = await runRecommendRoutine(req.body);
-  res.status(result.status).json(result.body);
+  return res.status(result.status).json(result.body);
 }
