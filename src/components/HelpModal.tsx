@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { REFERENCE_MAX_KCAL, STAGE_KCAL_RANGE } from '../lib/energyStage';
 
 interface HelpModalProps {
   onClose: () => void;
+  onResetAll?: () => void;
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -14,7 +15,9 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-export function HelpModal({ onClose }: HelpModalProps) {
+export function HelpModal({ onClose, onResetAll }: HelpModalProps) {
+  const [confirmingReset, setConfirmingReset] = useState(false);
+
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4">
       <div className="flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-ivory shadow-2xl sm:rounded-3xl">
@@ -46,7 +49,7 @@ export function HelpModal({ onClose }: HelpModalProps) {
           </Section>
 
           <Section title="🙂 표정 변화">
-            가벼울 땐 웃으며 새싹이, 슬슬 쌓일 땐 번개가, 많이 쌓이면 땀방울이 나타나요.
+            가벼울 땐 웃으며 새싹이, 슬슬 쌓일 땐 무표정, 많이 쌓이면 땀방울이 나타나요.
           </Section>
 
           <Section title="🍪 간식 기록하는 법">
@@ -58,6 +61,45 @@ export function HelpModal({ onClose }: HelpModalProps) {
             트레이에서 간식을 선택하고 “움직임으로 바꾸기”를 누른 뒤 시간·장소·강도를
             고르면, AI가 지금 상황에 맞는 움직임 3가지를 추천해줘요.
           </Section>
+
+          {onResetAll && (
+            <div className="mt-2 rounded-2xl border border-dashed border-red-300/60 bg-red-50/60 px-4 py-3.5">
+              <p className="text-xs font-bold text-red-500">전체 초기화</p>
+              <p className="mt-1 text-xs leading-relaxed text-navy-soft">
+                기록된 모든 간식과 완료한 움직임을 지우고 처음 상태로 되돌려요. 되돌릴 수 없어요.
+              </p>
+
+              {!confirmingReset ? (
+                <button
+                  type="button"
+                  onClick={() => setConfirmingReset(true)}
+                  className="mt-3 rounded-full border border-red-300 px-3.5 py-1.5 text-xs font-semibold text-red-500 transition-colors hover:bg-red-100/60"
+                >
+                  전체 초기화하기
+                </button>
+              ) : (
+                <div className="mt-3 flex items-center gap-2">
+                  <p className="text-xs font-semibold text-red-500">정말 다 지울까요?</p>
+                  <div className="ml-auto flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingReset(false)}
+                      className="rounded-full border border-navy/15 bg-ivory-card px-3 py-1.5 text-xs font-semibold text-navy-soft"
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onResetAll}
+                      className="rounded-full bg-red-500 px-3 py-1.5 text-xs font-semibold text-white active:scale-95"
+                    >
+                      네, 지울게요
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="border-t border-navy/10 px-5 py-4">

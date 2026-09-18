@@ -54,3 +54,13 @@ export function saveState(state: AppState): void {
     // localStorage 접근 실패 시에도 앱이 계속 동작하도록 조용히 무시
   }
 }
+
+// "전체 초기화" — 저장된 기록을 완전히 지우고 빈 상태를 돌려줍니다.
+export function clearState(): AppState {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // localStorage 접근 실패 시에도 앱이 계속 동작하도록 조용히 무시
+  }
+  return defaultState;
+}

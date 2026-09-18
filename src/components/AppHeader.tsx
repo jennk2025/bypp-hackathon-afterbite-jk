@@ -3,9 +3,10 @@ import { HelpModal } from './HelpModal';
 
 interface AppHeaderProps {
   onLogoClick?: () => void;
+  onResetAll?: () => void;
 }
 
-export function AppHeader({ onLogoClick }: AppHeaderProps) {
+export function AppHeader({ onLogoClick, onResetAll }: AppHeaderProps) {
   const [showHelp, setShowHelp] = useState(false);
 
   return (
@@ -42,7 +43,7 @@ export function AppHeader({ onLogoClick }: AppHeaderProps) {
         </button>
       </div>
 
-      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} onResetAll={onResetAll} />}
     </div>
   );
 }

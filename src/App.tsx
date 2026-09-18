@@ -10,7 +10,7 @@ import { MoveConditionForm } from './components/MoveConditionForm';
 import { RoutineSuggestions } from './components/RoutineSuggestions';
 import { WorkoutTimer } from './components/WorkoutTimer';
 import { CompletedWorkoutsModal } from './components/CompletedWorkoutsModal';
-import { loadState, saveState } from './lib/storage';
+import { loadState, saveState, clearState } from './lib/storage';
 import { useEnergyGauge } from './hooks/useEnergyGauge';
 import { useSnackTray } from './hooks/useSnackTray';
 import { useWorkoutFlow } from './hooks/useWorkoutFlow';
@@ -45,6 +45,13 @@ export default function App() {
     });
   }
 
+  // 도움말 안의 "전체 초기화" — 저장된 간식/운동 기록을 전부 지우고 홈으로 돌아갑니다.
+  function resetAll() {
+    setState(clearState());
+    setModal(null);
+    setScreen('tray');
+  }
+
   const { currentEnergyKcal, fillPercent } = useEnergyGauge(state.snacks, state.completedWorkouts);
 
   const tray = useSnackTray(setState, state.snacks);
@@ -68,7 +75,7 @@ export default function App() {
         <div className="bg-decor" aria-hidden="true" />
         <div className="bg-decor-spot" aria-hidden="true" />
         <BackgroundSparkles />
-        <AppHeader onLogoClick={goHome} />
+        <AppHeader onLogoClick={goHome} onResetAll={resetAll} />
         <div className="pt-14 lg:pt-16">
           <MoveConditionForm
             totalCalories={tray.selectedTotalCalories}
@@ -87,7 +94,7 @@ export default function App() {
         <div className="bg-decor" aria-hidden="true" />
         <div className="bg-decor-spot" aria-hidden="true" />
         <BackgroundSparkles />
-        <AppHeader onLogoClick={goHome} />
+        <AppHeader onLogoClick={goHome} onResetAll={resetAll} />
         <div className="pt-14 lg:pt-16">
           <RoutineSuggestions
             routines={workout.routines}
@@ -110,7 +117,7 @@ export default function App() {
         <div className="bg-decor" aria-hidden="true" />
         <div className="bg-decor-spot" aria-hidden="true" />
         <BackgroundSparkles />
-        <AppHeader onLogoClick={goHome} />
+        <AppHeader onLogoClick={goHome} onResetAll={resetAll} />
         <div className="pt-14 lg:pt-16">
           <WorkoutTimer
             routine={inProgress.routine}
@@ -131,7 +138,7 @@ export default function App() {
       <div className="bg-decor" aria-hidden="true" />
       <div className="bg-decor-spot" aria-hidden="true" />
       <BackgroundSparkles />
-      <AppHeader onLogoClick={goHome} />
+      <AppHeader onLogoClick={goHome} onResetAll={resetAll} />
 
       {/* 좁은 화면(폰)에서는 그냥 위→아래(타이틀→캐릭터→균형막대→트레이) 문서 순서 그대로
           쌓이고, 넓은 화면(lg+)에서만 home-grid가 4개 영역(title/gauge/char/tray)으로 재배치합니다.
