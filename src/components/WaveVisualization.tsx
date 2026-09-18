@@ -45,46 +45,50 @@ interface FillTheme {
   waveSeconds: number;
 }
 
-const FILL_THEME: Record<FillLevel, FillTheme> = {
-  calm: {
-    label: '가벼운 상태예요',
-    emoji: '🌱',
-    from: 'var(--color-teal)',
-    to: 'var(--color-aqua)',
-    crest: 'var(--color-aqua)',
-    ripple: 'var(--color-lavender)',
-    glow: 'rgba(45, 212, 191, 0.55)',
-    halo: 'rgba(45, 212, 191, 0.32)',
-    waveSeconds: 7,
-  },
-  building: {
-    label: '슬슬 쌓이고 있어요',
-    emoji: '⚡',
-    from: '#fbbf24',
-    to: '#f59e0b',
-    crest: '#fbbf24',
-    ripple: '#fde68a',
-    glow: 'rgba(245, 158, 11, 0.55)',
-    halo: 'rgba(245, 158, 11, 0.32)',
-    waveSeconds: 5,
-  },
-  heavy: {
-    label: '많이 쌓였어요',
-    emoji: '🔥',
-    from: '#fb7185',
-    to: '#e11d48',
-    crest: '#fb7185',
-    ripple: '#fecdd3',
-    glow: 'rgba(225, 29, 72, 0.6)',
-    halo: 'rgba(225, 29, 72, 0.34)',
-    waveSeconds: 3.2,
-  },
-};
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t;
+}
 
-function getFillLevel(percent: number): FillLevel {
-  if (percent < 35) return 'calm';
-  if (percent < 70) return 'building';
-  return 'heavy';
+function getDynamicTheme(percent: number): FillTheme {
+  const p = Math.max(0, Math.min(100, percent));
+  
+  let h, s, l;
+  let emoji, label;
+  
+  if (p < 50) {
+    const t = p / 50;
+    // Teal (172, 77%, 50%) to Amber (45, 96%, 56%)
+    h = lerp(172, 45, t);
+    s = lerp(77, 96, t);
+    l = lerp(50, 56, t);
+    emoji = p < 25 ? '🌱' : '⚡';
+    label = p < 25 ? '가벼운 상태예요' : '슬슬 쌓이고 있어요';
+  } else {
+    const t = (p - 50) / 50;
+    // Amber (45, 96%, 56%) to Rose (-13, 89%, 60%)
+    h = lerp(45, -13, t);
+    s = lerp(96, 89, t);
+    l = lerp(56, 60, t);
+    emoji = p < 80 ? '🔥' : '🚨';
+    label = p < 80 ? '많이 쌓였어요' : '최대치예요!';
+  }
+  
+  const hNorm = (h + 360) % 360;
+  const baseColor = `hsl(${hNorm}, ${s}%, ${l}%)`;
+  const darkColor = `hsl(${hNorm}, ${s}%, ${l - 12}%)`;
+  const lightColor = `hsl(${hNorm}, ${s}%, ${l + 25}%)`;
+  
+  return {
+    label,
+    emoji,
+    from: baseColor,
+    to: darkColor,
+    crest: baseColor,
+    ripple: lightColor,
+    glow: `hsla(${hNorm}, ${s}%, ${l}%, 0.55)`,
+    halo: `hsla(${hNorm}, ${s}%, ${l}%, 0.32)`,
+    waveSeconds: lerp(7, 3.2, p / 100),
+  };
 }
 
 export function WaveVisualization({
@@ -96,8 +100,7 @@ export function WaveVisualization({
   onToggleCharacter,
 }: WaveVisualizationProps) {
   const clamped = Math.max(0, Math.min(100, fillPercent));
-  const level = getFillLevel(clamped);
-  const theme = FILL_THEME[level];
+  const theme = getDynamicTheme(clamped);
   const haloStyle = {
     '--halo-color': theme.halo,
     '--halo-speed': `${theme.waveSeconds + 1.3}s`,
