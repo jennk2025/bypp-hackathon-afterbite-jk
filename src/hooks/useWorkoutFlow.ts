@@ -1,0 +1,216 @@
+import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
+import { generateId } from '../lib/id';
+import { recommendRoutines } from '../lib/routineVision';
+import type { AppState, ExerciseRoutine, MoveConditions, Screen } from '../types';
+
+interface UseWorkoutFlowParams {
+  state: AppState;
+  setState: Dispatch<SetStateAction<AppState>>;
+  screen: Screen;
+  setScreen: (screen: Screen) => void;
+  selectedIds: Set<string>;
+  selectedTotalCalories: number;
+  clearSelection: () => void;
+}
+
+/** 조건 입력 → AI/규칙 기반 루틴 추천 → 운동 타이머 → 완료(부분 소모 반영)까지의 흐름을 관리합니다. */
+export function useWorkoutFlow({
+  state,
+  setState,
+  screen,
+  setScreen,
+  selectedIds,
+  selectedTotalCalories,
+  clearSelection,
+}: UseWorkoutFlowParams) {
+  const [routines, setRoutines] = useState<ExerciseRoutine[]>([]);
+  const [isRecommendingRoutines, setIsRecommendingRoutines] = useState(false);
+  const [lastConditions, setLastConditions] = useState<MoveConditions | null>(null);
+  const [justCompletedId, setJustCompletedId] = useState<string | null>(null);
+
+  // 의도적으로 status만 의존성에 넣습니다: inProgressWorkout 객체 전체를 넣으면
+  // elapsedSeconds가 바뀔 때마다(매초) 이 이펙트가 재실행되어 인터벌이 계속 재생성됩니다.
+  useEffect(() => {
+    if (screen !== 'workout') return;
+    if (!state.inProgressWorkout || state.inProgressWorkout.status !== 'running') return;
+    const interval = setInterval(() => {
+      setState((prev) =>
+        prev.inProgressWorkout
+          ? {
+              ...prev,
+              inProgressWorkout: {
+                ...prev.inProgressWorkout,
+                elapsedSeconds: prev.inProgressWorkout.elapsedSeconds + 1,
+              },
+            }
+          : prev
+      );
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [screen, state.inProgressWorkout?.status, setState]);
+
+  async function fetchRoutines(cond: MoveConditions) {
+    setIsRecommendingRoutines(true);
+    setRoutines([]);
+    const result = await recommendRoutines(cond, selectedTotalCalories);
+    setRoutines(result);
+    setIsRecommendingRoutines(false);
+  }
+
+  async function handleConditionsSubmit(cond: MoveConditions) {
+    setLastConditions(cond);
+    setScreen('routines');
+    await fetchRoutines(cond);
+  }
+
+  function handleRetryRoutines() {
+    if (lastConditions) fetchRoutines(lastConditions);
+  }
+
+  function handleRoutineSelect(routine: ExerciseRoutine) {
+    const snackIds = Array.from(selectedIds);
+    setState((prev) => {
+      const snackRemainingSnapshot = Object.fromEntries(
+        snackIds.map((id) => [id, prev.snacks.find((s) => s.id === id)?.remainingCalories ?? 0])
+      );
+      return {
+        ...prev,
+        snacks: prev.snacks.map((s) => (snackIds.includes(s.id) ? { ...s, exerciseStatus: 'in_progress' } : s)),
+        inProgressWorkout: {
+          routine,
+          snackIds,
+          snackRemainingSnapshot,
+          elapsedSeconds: 0,
+          status: 'running',
+          currentStepIndex: 0,
+          savedAt: new Date().toISOString(),
+        },
+      };
+    });
+    clearSelection();
+    setScreen('workout');
+  }
+
+  function pauseResumeWorkout() {
+    setState((prev) =>
+      prev.inProgressWorkout
+        ? {
+            ...prev,
+            inProgressWorkout: {
+              ...prev.inProgressWorkout,
+              status: prev.inProgressWorkout.status === 'running' ? 'paused' : 'running',
+            },
+          }
+        : prev
+    );
+  }
+
+  function nextStep() {
+    setState((prev) => {
+      if (!prev.inProgressWorkout) return prev;
+      const max = prev.inProgressWorkout.routine.steps.length - 1;
+      return {
+        ...prev,
+        inProgressWorkout: {
+          ...prev.inProgressWorkout,
+          currentStepIndex: Math.min(max, prev.inProgressWorkout.currentStepIndex + 1),
+        },
+      };
+    });
+  }
+
+  function completeWorkout() {
+    setState((prev) => {
+      if (!prev.inProgressWorkout) return prev;
+      const { routine, snackIds, snackRemainingSnapshot } = prev.inProgressWorkout;
+      const recordId = generateId();
+      setJustCompletedId(recordId);
+
+      // 태운 칼로리(중간값)를 선택된 간식 순서대로 다 채울 때까지 나눠 차감합니다.
+      // 다 태우지 못한 간식은 완료 처리하지 않고, 남은 만큼만 줄여 다시 선택할 수 있게 둡니다.
+      let remainingBurn = (routine.estBurnLowKcal + routine.estBurnHighKcal) / 2;
+      const snacks = prev.snacks.map((s) => {
+        if (!snackIds.includes(s.id)) return s;
+        const before = snackRemainingSnapshot[s.id] ?? s.remainingCalories;
+        if (remainingBurn <= 0) {
+          return { ...s, exerciseStatus: 'none' as const, remainingCalories: before };
+        }
+        if (remainingBurn >= before) {
+          remainingBurn -= before;
+          return { ...s, exerciseStatus: 'completed' as const, remainingCalories: 0 };
+        }
+        const after = before - remainingBurn;
+        remainingBurn = 0;
+        return { ...s, exerciseStatus: 'none' as const, remainingCalories: after };
+      });
+
+      return {
+        ...prev,
+        snacks,
+        completedWorkouts: [
+          ...prev.completedWorkouts,
+          {
+            id: recordId,
+            routineName: routine.name,
+            snackIds,
+            snackRemainingSnapshot,
+            burnedLowKcal: routine.estBurnLowKcal,
+            burnedHighKcal: routine.estBurnHighKcal,
+            completedAt: new Date().toISOString(),
+          },
+        ],
+        inProgressWorkout: null,
+      };
+    });
+    setScreen('tray');
+  }
+
+  function cancelWorkout() {
+    setState((prev) => {
+      if (!prev.inProgressWorkout) return prev;
+      const { snackIds } = prev.inProgressWorkout;
+      return {
+        ...prev,
+        snacks: prev.snacks.map((s) => (snackIds.includes(s.id) ? { ...s, exerciseStatus: 'none' } : s)),
+        inProgressWorkout: null,
+      };
+    });
+    setScreen('tray');
+  }
+
+  function undoLastCompletion() {
+    setState((prev) => {
+      const last = prev.completedWorkouts[prev.completedWorkouts.length - 1];
+      if (!last || last.id !== justCompletedId) return prev;
+      return {
+        ...prev,
+        snacks: prev.snacks.map((s) =>
+          last.snackIds.includes(s.id)
+            ? {
+                ...s,
+                exerciseStatus: 'none',
+                remainingCalories: last.snackRemainingSnapshot[s.id] ?? s.remainingCalories,
+              }
+            : s
+        ),
+        completedWorkouts: prev.completedWorkouts.slice(0, -1),
+      };
+    });
+    setJustCompletedId(null);
+  }
+
+  return {
+    routines,
+    isRecommendingRoutines,
+    justCompletedId,
+    setJustCompletedId,
+    handleConditionsSubmit,
+    handleRetryRoutines,
+    handleRoutineSelect,
+    pauseResumeWorkout,
+    nextStep,
+    completeWorkout,
+    cancelWorkout,
+    undoLastCompletion,
+  };
+}

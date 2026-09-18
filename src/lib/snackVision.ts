@@ -1,4 +1,11 @@
 import { recognizeSnackPhoto } from './ocr';
+import { fetchGeminiJson } from './geminiClient';
+
+interface GeminiSnackResponse {
+  name?: string;
+  caloriesPerServing?: number;
+  servingSizeLabel?: string;
+}
 
 export interface VisionResult {
   success: boolean;
@@ -49,22 +56,14 @@ function fileToBase64(file: File): Promise<string> {
 async function tryGemini(file: File): Promise<VisionResult | null> {
   try {
     const imageBase64 = await fileToBase64(file);
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-    const response = await fetch('/api/analyze-snack', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageBase64, mimeType: file.type || 'image/jpeg' }),
-      signal: controller.signal,
+    const data = await fetchGeminiJson<GeminiSnackResponse>({
+      path: '/api/analyze-snack',
+      body: { imageBase64, mimeType: file.type || 'image/jpeg' },
     });
-    clearTimeout(timeoutId);
+    if (!data) return null;
 
-    if (!response.ok) return null;
-
-    const data = await response.json();
-    const hasName = Boolean(data?.name);
-    const hasCalories = data?.caloriesPerServing != null;
+    const hasName = Boolean(data.name);
+    const hasCalories = data.caloriesPerServing != null;
     if (!hasName && !hasCalories) return null;
 
     return {

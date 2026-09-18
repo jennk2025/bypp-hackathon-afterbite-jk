@@ -78,6 +78,8 @@ export interface AppState {
   inProgressWorkout: InProgressWorkout | null;
 }
 
+export type Screen = 'tray' | 'conditions' | 'routines' | 'workout';
+
 export interface SnackDbEntry {
   name: string;
   servingSizeLabel: string;

@@ -1,5 +1,6 @@
 import { generateRoutines } from './routineGenerator';
 import { generateId } from './id';
+import { fetchGeminiJson } from './geminiClient';
 import type { ExerciseRoutine, MoveConditions } from '../types';
 
 interface GeminiRoutine {
@@ -10,25 +11,22 @@ interface GeminiRoutine {
   steps?: unknown;
 }
 
+interface GeminiRoutineResponse {
+  routines?: GeminiRoutine[];
+}
+
 async function tryGeminiRoutines(
   cond: MoveConditions,
   totalCalories: number
 ): Promise<ExerciseRoutine[] | null> {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-    const response = await fetch('/api/recommend-routine', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...cond, totalCalories }),
-      signal: controller.signal,
+    const data = await fetchGeminiJson<GeminiRoutineResponse>({
+      path: '/api/recommend-routine',
+      body: { ...cond, totalCalories },
     });
-    clearTimeout(timeoutId);
-    if (!response.ok) return null;
+    if (!data) return null;
 
-    const data = await response.json();
-    const list: GeminiRoutine[] = Array.isArray(data?.routines) ? data.routines : [];
+    const list: GeminiRoutine[] = Array.isArray(data.routines) ? data.routines : [];
 
     const routines: ExerciseRoutine[] = list
       .filter((r) => typeof r.name === 'string' && Array.isArray(r.steps))
