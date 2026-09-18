@@ -72,22 +72,29 @@ function getDynamicTheme(percent: number): FillTheme {
   };
 }
 
-const STICKERS: { emoji: string; top: string; left: string; size: string; bg: string; delay: string }[] = [
-  { emoji: '🍩', top: '0%', left: '2%', size: 'text-2xl', bg: 'bg-[#FFD9C7]', delay: '0s' },
-  { emoji: '🍭', top: '8%', left: '84%', size: 'text-xl', bg: 'bg-[#E6DBFF]', delay: '0.5s' },
-  { emoji: '🍕', top: '34%', left: '90%', size: 'text-2xl', bg: 'bg-[#FFD1A8]', delay: '1.1s' },
-  { emoji: '🍔', top: '70%', left: '0%', size: 'text-xl', bg: 'bg-[#F7D9A8]', delay: '1.3s' },
-  { emoji: '🧁', top: '46%', left: '-2%', size: 'text-2xl', bg: 'bg-[#C8F4E0]', delay: '1s' },
-  { emoji: '🍪', top: '50%', left: '86%', size: 'text-xl', bg: 'bg-[#CFE8FF]', delay: '1.5s' },
-  { emoji: '🍿', top: '86%', left: '10%', size: 'text-lg', bg: 'bg-[#FFEFB0]', delay: '0.3s' },
-  { emoji: '🍰', top: '90%', left: '78%', size: 'text-xl', bg: 'bg-[#FFE3D3]', delay: '0.9s' },
-  { emoji: '🍗', top: '62%', left: '96%', size: 'text-xl', bg: 'bg-[#FFDDB8]', delay: '0.7s' },
+// 캐릭터 중심(50%,50%) 기준으로 각도·반지름을 지정해 원형으로 고르게 배치합니다.
+// 무작위로 흩뿌리는 대신 일정한 각도 간격(45°)을 쓰면 화려하면서도 정돈된 인상을 줍니다.
+function polar(angleDeg: number, radius: number) {
+  const rad = (angleDeg * Math.PI) / 180;
+  return { top: `${50 - radius * Math.cos(rad)}%`, left: `${50 + radius * Math.sin(rad)}%` };
+}
+
+const STICKERS: { emoji: string; angle: number; radius: number; size: string; bg: string; delay: string }[] = [
+  { emoji: '🍩', angle: 0, radius: 60, size: 'text-2xl', bg: 'bg-[#FFD9C7]', delay: '0s' },
+  { emoji: '🍭', angle: 45, radius: 66, size: 'text-lg', bg: 'bg-[#E6DBFF]', delay: '0.5s' },
+  { emoji: '🍕', angle: 90, radius: 58, size: 'text-2xl', bg: 'bg-[#FFD1A8]', delay: '1.1s' },
+  { emoji: '🍔', angle: 135, radius: 66, size: 'text-lg', bg: 'bg-[#F7D9A8]', delay: '1.3s' },
+  { emoji: '🍗', angle: 180, radius: 62, size: 'text-xl', bg: 'bg-[#FFDDB8]', delay: '0.7s' },
+  { emoji: '🧁', angle: 225, radius: 66, size: 'text-lg', bg: 'bg-[#C8F4E0]', delay: '1s' },
+  { emoji: '🍪', angle: 270, radius: 58, size: 'text-2xl', bg: 'bg-[#CFE8FF]', delay: '1.5s' },
+  { emoji: '🍰', angle: 315, radius: 66, size: 'text-lg', bg: 'bg-[#FFE3D3]', delay: '0.9s' },
 ];
 
-const SPARKLES: { top: string; left: string; size: number; color: string; delay: string }[] = [
-  { top: '-2%', left: '38%', size: 16, color: '#C9B6FF', delay: '0.6s' },
-  { top: '78%', left: '18%', size: 13, color: '#34D399', delay: '1.2s' },
-  { top: '18%', left: '62%', size: 12, color: '#FF9A76', delay: '1.6s' },
+const SPARKLES: { angle: number; radius: number; size: number; color: string; delay: string }[] = [
+  { angle: 22, radius: 72, size: 14, color: '#C9B6FF', delay: '0.6s' },
+  { angle: 112, radius: 72, size: 11, color: '#34D399', delay: '1.4s' },
+  { angle: 202, radius: 72, size: 12, color: '#FF9A76', delay: '0.9s' },
+  { angle: 292, radius: 72, size: 11, color: '#7DD3FC', delay: '1.8s' },
 ];
 
 // 캐릭터 몸통은 svg 좌표계 y=50~190(높이 140) 사각형입니다. percent가 클수록(=아직
@@ -117,30 +124,36 @@ export function WaveVisualization({
     <div id="hero" className="flex scroll-mt-20 flex-col items-center gap-4">
       <div className="relative flex w-full flex-col items-center">
         {/* 캐릭터 주위를 떠다니는 간식 스티커 — 장식용, 데이터 없음 */}
-        {STICKERS.map((s, i) => (
-          <span
-            key={i}
-            aria-hidden="true"
-            className={`float-sticker absolute flex h-9 w-9 items-center justify-center rounded-full shadow-sm sm:h-11 sm:w-11 ${s.size} ${s.bg}`}
-            style={{ top: s.top, left: s.left, animationDelay: s.delay }}
-          >
-            {s.emoji}
-          </span>
-        ))}
-        {SPARKLES.map((s, i) => (
-          <svg
-            key={i}
-            aria-hidden="true"
-            className="sparkle-icon absolute"
-            width={s.size}
-            height={s.size}
-            viewBox="0 0 20 20"
-            fill={s.color}
-            style={{ top: s.top, left: s.left, animationDelay: s.delay }}
-          >
-            <path d="M10 0 12.2 7.8 20 10 12.2 12.2 10 20 7.8 12.2 0 10 7.8 7.8Z" />
-          </svg>
-        ))}
+        {STICKERS.map((s, i) => {
+          const pos = polar(s.angle, s.radius);
+          return (
+            <span
+              key={i}
+              aria-hidden="true"
+              className={`float-sticker absolute flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full shadow-sm sm:h-11 sm:w-11 ${s.size} ${s.bg}`}
+              style={{ top: pos.top, left: pos.left, animationDelay: s.delay }}
+            >
+              {s.emoji}
+            </span>
+          );
+        })}
+        {SPARKLES.map((s, i) => {
+          const pos = polar(s.angle, s.radius);
+          return (
+            <svg
+              key={i}
+              aria-hidden="true"
+              className="sparkle-icon absolute -translate-x-1/2 -translate-y-1/2"
+              width={s.size}
+              height={s.size}
+              viewBox="0 0 20 20"
+              fill={s.color}
+              style={{ top: pos.top, left: pos.left, animationDelay: s.delay }}
+            >
+              <path d="M10 0 12.2 7.8 20 10 12.2 12.2 10 20 7.8 12.2 0 10 7.8 7.8Z" />
+            </svg>
+          );
+        })}
 
         <div
           className="wave-halo mx-auto h-[clamp(260px,72vw,380px)] w-[clamp(240px,66vw,350px)]"

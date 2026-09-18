@@ -1,12 +1,12 @@
+// 화면을 느슨한 격자로 나눠 칸마다 하나씩 — 정돈되어 보이면서도 규칙적이지 않게
+// 살짝 자리를 어긋나게 두어 자연스럽습니다.
 const SPARKLES: { top: string; left: string; size: number; color: string; delay: string }[] = [
-  { top: '6%', left: '12%', size: 14, color: '#FFC26B', delay: '0s' },
-  { top: '14%', left: '82%', size: 11, color: '#C9B6FF', delay: '0.8s' },
-  { top: '28%', left: '46%', size: 9, color: '#7DD3FC', delay: '1.6s' },
-  { top: '42%', left: '90%', size: 13, color: '#FF9A76', delay: '0.4s' },
-  { top: '55%', left: '6%', size: 10, color: '#4ADE80', delay: '1.2s' },
-  { top: '68%', left: '70%', size: 12, color: '#FFC26B', delay: '2s' },
-  { top: '80%', left: '20%', size: 9, color: '#C9B6FF', delay: '0.6s' },
-  { top: '92%', left: '58%', size: 11, color: '#7DD3FC', delay: '1.4s' },
+  { top: '8%', left: '15%', size: 12, color: '#FFC26B', delay: '0s' },
+  { top: '16%', left: '85%', size: 10, color: '#C9B6FF', delay: '0.9s' },
+  { top: '48%', left: '92%', size: 11, color: '#7DD3FC', delay: '1.8s' },
+  { top: '58%', left: '8%', size: 10, color: '#4ADE80', delay: '0.5s' },
+  { top: '86%', left: '25%', size: 12, color: '#FF9A76', delay: '1.3s' },
+  { top: '90%', left: '80%', size: 10, color: '#C9B6FF', delay: '2.1s' },
 ];
 
 /** 배경 전체에 은은하게 반짝이는 별 장식 — 장식용, 인터랙션 없음 */
@@ -16,7 +16,7 @@ export function BackgroundSparkles() {
       {SPARKLES.map((s, i) => (
         <svg
           key={i}
-          className="sparkle-icon absolute opacity-60"
+          className="sparkle-icon absolute opacity-45"
           width={s.size}
           height={s.size}
           viewBox="0 0 20 20"

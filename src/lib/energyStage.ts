@@ -3,9 +3,11 @@
 // 한 곳에서만 정의합니다.
 export type Stage = 'light' | 'rising' | 'heavy';
 
-// 이 kcal에 도달하면 100%(빨간 구간)입니다. useEnergyGauge의 fillPercent 계산과
-// BalanceScale의 kcal 안내 문구가 이 값을 공유해서 서로 어긋나지 않게 합니다.
-export const REFERENCE_MAX_KCAL = 2500;
+// 이 kcal에 도달하면 100%(빨간 구간)입니다. 이 앱은 끼니가 아닌 "간식"만 기록하는
+// 컨셉이라 하루 식사 전체 기준(2000kcal대)보다 낮게, 간식만으로 하루 1200kcal쯤 쌓이면
+// "많이 먹었다"로 보이도록 잡았습니다. useEnergyGauge의 fillPercent 계산과 BalanceScale의
+// kcal 안내 문구가 이 값을 공유해서 서로 어긋나지 않게 합니다.
+export const REFERENCE_MAX_KCAL = 1200;
 
 export const STAGE_RISING_AT = 35;
 export const STAGE_HEAVY_AT = 70;
