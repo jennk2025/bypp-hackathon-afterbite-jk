@@ -279,7 +279,7 @@ export function WaveVisualization({
           <span aria-hidden="true">{theme.emoji}</span>
           {theme.label}
         </span>
-        <p className="mt-1 text-xs font-medium tracking-wide text-navy-soft lg:text-sm">오늘 누적 칼로리</p>
+        <p className="mt-1 text-xs font-medium tracking-wide text-navy-soft lg:text-sm">누적 칼로리</p>
         <p className="font-display text-3xl text-charcoal sm:text-4xl lg:text-5xl">
           {Math.round(currentEnergyKcal)}
           <span className="ml-0.5 text-base font-semibold text-navy-soft lg:text-xl">kcal</span>
