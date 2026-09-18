@@ -3,6 +3,7 @@
 @theme {
   --color-ivory: #080c16;
   --color-ivory-card: #101828;
+  --color-header: #1d2c4d;
   --color-charcoal: #eef1f7;
   --color-navy: #eef1f7;
   --color-navy-soft: #8d96ab;
@@ -13,6 +14,7 @@
   --font-sans:
     'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Space Grotesk', 'Pretendard', -apple-system, sans-serif;
+  --font-brand: 'Syne', 'Space Grotesk', 'Pretendard', -apple-system, sans-serif;
 }
 
 html,
@@ -23,8 +25,15 @@ body,
 
 body {
   background-color: var(--color-ivory);
-  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 22px 22px;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    radial-gradient(circle at 50% 30%, rgba(45, 212, 191, 0.2), transparent 58%),
+    linear-gradient(165deg, #182746 0%, #101c34 36%, #0a1122 68%, #060911 100%);
+  background-size:
+    22px 22px,
+    100% 100%,
+    100% 100%;
+  background-attachment: fixed;
   color: var(--color-navy);
   font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
@@ -80,31 +89,31 @@ body {
 }
 
 .bg-decor::before {
-  width: 24rem;
-  height: 24rem;
-  background: radial-gradient(circle, rgba(45, 212, 191, 0.26), transparent 70%);
+  width: 26rem;
+  height: 26rem;
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.34), transparent 70%);
   top: -7rem;
   right: -6rem;
 }
 
 .bg-decor::after {
-  width: 27rem;
-  height: 27rem;
-  background: radial-gradient(circle, rgba(163, 230, 53, 0.16), transparent 70%);
+  width: 29rem;
+  height: 29rem;
+  background: radial-gradient(circle, rgba(163, 230, 53, 0.22), transparent 70%);
   bottom: -10rem;
   left: -9rem;
 }
 
 .bg-decor-spot {
   position: fixed;
-  top: 38%;
+  top: 32%;
   left: 50%;
-  width: 30rem;
-  height: 30rem;
+  width: 34rem;
+  height: 34rem;
   transform: translate(-50%, -50%);
   border-radius: 9999px;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.1), transparent 72%);
-  filter: blur(60px);
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.26), transparent 70%);
+  filter: blur(55px);
   z-index: -1;
   pointer-events: none;
 }
@@ -112,7 +121,50 @@ body {
 .wave-glow {
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.06),
-    0 25px 60px -20px rgba(45, 212, 191, 0.45);
+    0 25px 70px -18px rgba(45, 212, 191, 0.55);
+}
+
+/* 캐릭터 주변에 은은하게 번지는 이중 링 — 사진이 배경에서 도드라지도록 함 */
+.wave-halo {
+  position: relative;
+}
+
+.wave-halo::before,
+.wave-halo::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 9999px;
+  border: 1px solid rgba(45, 212, 191, 0.22);
+  pointer-events: none;
+}
+
+.wave-halo::before {
+  width: 112%;
+  height: 112%;
+  transform: translate(-50%, -50%) scale(1);
+  animation: halo-pulse 4.5s ease-in-out infinite;
+}
+
+.wave-halo::after {
+  width: 132%;
+  height: 132%;
+  border-color: rgba(56, 189, 248, 0.14);
+  transform: translate(-50%, -50%) scale(1);
+  animation: halo-pulse 4.5s ease-in-out infinite 0.7s;
+}
+
+@keyframes halo-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.035);
+  }
 }
 
 /* 캐릭터 on/off 스위치 */
@@ -138,22 +190,11 @@ body {
   border-radius: 50%;
   background: linear-gradient(135deg, var(--color-teal), var(--color-aqua));
   box-shadow: 0 4px 12px rgba(45, 212, 191, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
   transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .gender-switch[data-on='true'] .gender-switch-thumb {
   transform: translateX(36px);
-}
-
-.gender-switch-icon {
-  flex: 1;
-  text-align: center;
-  font-size: 13px;
-  opacity: 0.45;
 }
 
 @media (prefers-reduced-motion: reduce) {

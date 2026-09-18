@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { AppHeader } from './components/AppHeader';
 import { WaveVisualization, type RunnerCharacter } from './components/WaveVisualization';
 import { SnackCard } from './components/SnackCard';
 import { SelectionBar } from './components/SelectionBar';
@@ -257,12 +258,15 @@ export default function App() {
       <>
         <div className="bg-decor" aria-hidden="true" />
         <div className="bg-decor-spot" aria-hidden="true" />
-        <MoveConditionForm
-          totalCalories={selectedTotalCalories}
-          snackCount={selectedIds.size}
-          onBack={() => setScreen('tray')}
-          onSubmit={handleConditionsSubmit}
-        />
+        <AppHeader />
+        <div className="pt-14">
+          <MoveConditionForm
+            totalCalories={selectedTotalCalories}
+            snackCount={selectedIds.size}
+            onBack={() => setScreen('tray')}
+            onSubmit={handleConditionsSubmit}
+          />
+        </div>
       </>
     );
   }
@@ -272,7 +276,10 @@ export default function App() {
       <>
         <div className="bg-decor" aria-hidden="true" />
         <div className="bg-decor-spot" aria-hidden="true" />
-        <RoutineSuggestions routines={routines} onBack={() => setScreen('tray')} onSelect={handleRoutineSelect} />
+        <AppHeader />
+        <div className="pt-14">
+          <RoutineSuggestions routines={routines} onBack={() => setScreen('tray')} onSelect={handleRoutineSelect} />
+        </div>
       </>
     );
   }
@@ -282,28 +289,33 @@ export default function App() {
       <>
         <div className="bg-decor" aria-hidden="true" />
         <div className="bg-decor-spot" aria-hidden="true" />
-        <WorkoutTimer
-          routine={inProgress.routine}
-          elapsedSeconds={inProgress.elapsedSeconds}
-          isRunning={inProgress.status === 'running'}
-          currentStepIndex={inProgress.currentStepIndex}
-          onPauseResume={pauseResumeWorkout}
-          onNextStep={nextStep}
-          onComplete={completeWorkout}
-          onCancel={cancelWorkout}
-        />
+        <AppHeader />
+        <div className="pt-14">
+          <WorkoutTimer
+            routine={inProgress.routine}
+            elapsedSeconds={inProgress.elapsedSeconds}
+            isRunning={inProgress.status === 'running'}
+            currentStepIndex={inProgress.currentStepIndex}
+            onPauseResume={pauseResumeWorkout}
+            onNextStep={nextStep}
+            onComplete={completeWorkout}
+            onCancel={cancelWorkout}
+          />
+        </div>
       </>
     );
   }
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-md px-5 pb-32 pt-8">
+    <div className="mx-auto min-h-screen w-full max-w-md px-5 pb-32 pt-24">
       <div className="bg-decor" aria-hidden="true" />
+      <div className="bg-decor-spot" aria-hidden="true" />
+      <AppHeader />
       <header className="mb-6 text-center">
-        <h1 className="font-display bg-gradient-to-r from-teal via-aqua to-lavender bg-clip-text text-2xl tracking-tight text-transparent">
+        <h1 className="font-brand bg-gradient-to-r from-teal to-aqua bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl">
           AFTERBITE
         </h1>
-        <p className="mt-1 text-xs text-navy-soft">가볍게 기록하고, 지금 할 수 있는 만큼만 움직여요</p>
+        <p className="mt-2 text-xs text-navy-soft">가볍게 기록하고, 지금 할 수 있는 만큼만 움직여요</p>
       </header>
 
       <WaveVisualization
