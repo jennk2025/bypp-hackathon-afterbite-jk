@@ -1,3 +1,4 @@
+import { getSnackEmoji } from '../lib/snackVisuals';
 import type { Snack } from '../types';
 
 interface SnackCardProps {
@@ -48,6 +49,10 @@ export function SnackCard({ snack, selected, selectable, onToggleSelect, onEdit,
             </svg>
           )}
         </button>
+
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal/20 to-lavender-soft text-lg">
+          {getSnackEmoji(snack.name)}
+        </span>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">

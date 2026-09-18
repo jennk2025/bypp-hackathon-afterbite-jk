@@ -61,7 +61,8 @@ export default function App() {
     [state.completedWorkouts]
   );
   const currentEnergyKcal = Math.max(0, totalEatenKcal - totalBurnedMidKcal);
-  const referenceMax = Math.max(400, totalEatenKcal * 1.15, currentEnergyKcal * 1.1);
+  // 간식 한두 개만 기록해도 게이지가 금방 꽉 차 보이지 않도록 기준선을 넉넉하게 잡습니다.
+  const referenceMax = Math.max(1500, currentEnergyKcal * 1.6);
   const fillPercent = referenceMax > 0 ? (currentEnergyKcal / referenceMax) * 100 : 0;
 
   const selectableSnacks = state.snacks.filter((s) => s.exerciseStatus === 'none');
@@ -242,40 +243,52 @@ export default function App() {
 
   if (screen === 'conditions') {
     return (
-      <MoveConditionForm
-        totalCalories={selectedTotalCalories}
-        snackCount={selectedIds.size}
-        onBack={() => setScreen('tray')}
-        onSubmit={handleConditionsSubmit}
-      />
+      <>
+        <div className="bg-decor" aria-hidden="true" />
+        <MoveConditionForm
+          totalCalories={selectedTotalCalories}
+          snackCount={selectedIds.size}
+          onBack={() => setScreen('tray')}
+          onSubmit={handleConditionsSubmit}
+        />
+      </>
     );
   }
 
   if (screen === 'routines') {
     return (
-      <RoutineSuggestions routines={routines} onBack={() => setScreen('tray')} onSelect={handleRoutineSelect} />
+      <>
+        <div className="bg-decor" aria-hidden="true" />
+        <RoutineSuggestions routines={routines} onBack={() => setScreen('tray')} onSelect={handleRoutineSelect} />
+      </>
     );
   }
 
   if (screen === 'workout' && inProgress) {
     return (
-      <WorkoutTimer
-        routine={inProgress.routine}
-        elapsedSeconds={inProgress.elapsedSeconds}
-        isRunning={inProgress.status === 'running'}
-        currentStepIndex={inProgress.currentStepIndex}
-        onPauseResume={pauseResumeWorkout}
-        onNextStep={nextStep}
-        onComplete={completeWorkout}
-        onCancel={cancelWorkout}
-      />
+      <>
+        <div className="bg-decor" aria-hidden="true" />
+        <WorkoutTimer
+          routine={inProgress.routine}
+          elapsedSeconds={inProgress.elapsedSeconds}
+          isRunning={inProgress.status === 'running'}
+          currentStepIndex={inProgress.currentStepIndex}
+          onPauseResume={pauseResumeWorkout}
+          onNextStep={nextStep}
+          onComplete={completeWorkout}
+          onCancel={cancelWorkout}
+        />
+      </>
     );
   }
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-md px-5 pb-32 pt-8">
+      <div className="bg-decor" aria-hidden="true" />
       <header className="mb-6 text-center">
-        <h1 className="text-lg font-extrabold tracking-tight text-charcoal">AFTERBITE</h1>
+        <h1 className="font-display bg-gradient-to-r from-teal via-aqua to-lavender bg-clip-text text-2xl tracking-tight text-transparent">
+          AFTERBITE
+        </h1>
         <p className="mt-1 text-xs text-navy-soft">가볍게 기록하고, 지금 할 수 있는 만큼만 움직여요</p>
       </header>
 
@@ -347,7 +360,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setModal({ type: 'add' })}
-            className="rounded-full bg-charcoal px-3.5 py-1.5 text-xs font-semibold text-ivory"
+            className="btn-primary rounded-full px-3.5 py-1.5 text-xs font-semibold text-white"
           >
             + 간식 추가
           </button>

@@ -56,10 +56,14 @@ function OptionGroup<T extends string>({
 
 export function MoveConditionForm({ totalCalories, snackCount, onBack, onSubmit }: MoveConditionFormProps) {
   const [minutes, setMinutes] = useState(10);
+  const [useCustomMinutes, setUseCustomMinutes] = useState(false);
+  const [customMinutes, setCustomMinutes] = useState('');
   const [place, setPlace] = useState<Place>('living_room');
   const [intensity, setIntensity] = useState<Intensity>('mid');
   const [noiseOk, setNoiseOk] = useState(true);
   const [jumpOk, setJumpOk] = useState(true);
+
+  const effectiveMinutes = useCustomMinutes ? Math.max(1, parseInt(customMinutes, 10) || 0) : minutes;
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-28 pt-6">
@@ -92,15 +96,41 @@ export function MoveConditionForm({ totalCalories, snackCount, onBack, onSubmit 
               <button
                 key={m}
                 type="button"
-                onClick={() => setMinutes(m)}
+                onClick={() => {
+                  setMinutes(m);
+                  setUseCustomMinutes(false);
+                }}
                 className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                  minutes === m ? 'border-teal bg-teal/15 text-teal' : 'border-navy/15 bg-white text-navy-soft'
+                  !useCustomMinutes && minutes === m
+                    ? 'border-teal bg-teal/15 text-teal'
+                    : 'border-navy/15 bg-white text-navy-soft'
                 }`}
               >
                 {m}분{m === 20 ? '+' : ''}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => setUseCustomMinutes(true)}
+              className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                useCustomMinutes ? 'border-teal bg-teal/15 text-teal' : 'border-navy/15 bg-white text-navy-soft'
+              }`}
+            >
+              직접 입력
+            </button>
           </div>
+          {useCustomMinutes && (
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                value={customMinutes}
+                onChange={(e) => setCustomMinutes(e.target.value.replace(/[^0-9]/g, ''))}
+                inputMode="numeric"
+                placeholder="예: 3"
+                className="w-24 rounded-xl border border-navy/15 bg-white px-3.5 py-2 text-sm outline-none focus:border-teal"
+              />
+              <span className="text-sm text-navy-soft">분</span>
+            </div>
+          )}
         </div>
 
         <OptionGroup label="장소" options={PLACE_OPTIONS} value={place} onChange={setPlace} />
@@ -158,8 +188,9 @@ export function MoveConditionForm({ totalCalories, snackCount, onBack, onSubmit 
       <div className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md px-5 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] pt-3">
         <button
           type="button"
-          onClick={() => onSubmit({ minutes, place, intensity, noiseOk, jumpOk })}
-          className="w-full rounded-2xl bg-charcoal py-3.5 text-sm font-semibold text-ivory shadow-lg transition-transform active:scale-[0.98]"
+          onClick={() => onSubmit({ minutes: effectiveMinutes, place, intensity, noiseOk, jumpOk })}
+          disabled={useCustomMinutes && effectiveMinutes < 1}
+          className="btn-primary w-full rounded-2xl py-3.5 text-sm font-semibold text-white transition-transform active:scale-[0.98] disabled:opacity-40"
         >
           루틴 추천받기
         </button>

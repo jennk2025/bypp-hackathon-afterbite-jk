@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { SNACK_DB } from '../data/snackDatabase';
 import { analyzeSnackPhoto } from '../lib/snackVision';
+import { buildPortionPresets } from '../lib/portion';
 import type { Snack, SnackSource } from '../types';
 
 export interface SnackFormInput {
@@ -20,12 +21,6 @@ interface AddSnackModalProps {
 }
 
 type Step = 'choose' | 'photo' | 'form';
-
-const PORTION_PRESETS = [
-  { label: '반 봉지', multiplier: 0.5 },
-  { label: '한 봉지', multiplier: 1 },
-  { label: '두 봉지', multiplier: 2 },
-];
 
 export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackModalProps) {
   const [step, setStep] = useState<Step>(mode === 'edit' ? 'form' : 'choose');
@@ -58,6 +53,8 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
     return SNACK_DB.filter((entry) => entry.name.toLowerCase().includes(q)).slice(0, 5);
   }, [name, source]);
 
+  const portionPresets = useMemo(() => buildPortionPresets(servingSizeLabel), [servingSizeLabel]);
+
   const effectiveMultiplier = useCustomMultiplier
     ? Math.max(0.1, parseFloat(customMultiplier) || 0)
     : multiplier;
@@ -89,7 +86,7 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
     if (!name.trim() || totalCalories <= 0) return;
     const portionLabel = useCustomMultiplier
       ? `${effectiveMultiplier}배`
-      : PORTION_PRESETS.find((p) => p.multiplier === multiplier)?.label ?? '1봉지';
+      : portionPresets.find((p) => p.multiplier === multiplier)?.label ?? portionPresets[1].label;
 
     onSave({
       name: name.trim(),
@@ -128,7 +125,7 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                 onClick={() => fileInputRef.current?.click()}
                 className="flex items-center gap-3 rounded-2xl border border-navy/10 bg-white px-4 py-4 text-left shadow-sm transition-transform active:scale-[0.98]"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-lavender-soft text-lg">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lavender to-aqua text-lg shadow-sm">
                   📷
                 </span>
                 <span>
@@ -158,7 +155,7 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                 }}
                 className="flex items-center gap-3 rounded-2xl border border-navy/10 bg-white px-4 py-4 text-left shadow-sm transition-transform active:scale-[0.98]"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-teal/15 text-lg">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal to-aqua text-lg shadow-sm">
                   ✍️
                 </span>
                 <span>
@@ -267,9 +264,11 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
               </p>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-navy-soft">먹은 양</label>
+                <label className="mb-1.5 block text-xs font-semibold text-navy-soft">
+                  먹은 양 <span className="font-normal text-navy-soft/60">· 1회 제공량 기준</span>
+                </label>
                 <div className="flex flex-wrap gap-2">
-                  {PORTION_PRESETS.map((preset) => (
+                  {portionPresets.map((preset) => (
                     <button
                       key={preset.label}
                       type="button"
@@ -326,7 +325,7 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
               type="button"
               onClick={handleSubmit}
               disabled={!name.trim() || totalCalories <= 0}
-              className="w-full rounded-2xl bg-charcoal py-3.5 text-sm font-semibold text-ivory transition-transform active:scale-[0.98] disabled:opacity-40"
+              className="btn-primary w-full rounded-2xl py-3.5 text-sm font-semibold text-white transition-transform active:scale-[0.98] disabled:opacity-40"
             >
               {mode === 'edit' ? '수정 완료' : '트레이에 추가'}
             </button>

@@ -55,7 +55,7 @@ export function RoutineSuggestions({ routines, onBack, onSelect }: RoutineSugges
             <button
               type="button"
               onClick={() => onSelect(routine)}
-              className="mt-4 w-full rounded-xl bg-charcoal py-2.5 text-sm font-semibold text-ivory transition-transform active:scale-[0.98]"
+              className="btn-primary mt-4 w-full rounded-xl py-2.5 text-sm font-semibold text-white transition-transform active:scale-[0.98]"
             >
               이 루틴 시작하기
             </button>

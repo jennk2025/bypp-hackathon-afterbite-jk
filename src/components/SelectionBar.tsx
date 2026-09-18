@@ -24,7 +24,7 @@ export function SelectionBar({ selectedCount, totalCalories, onConvert }: Select
           type="button"
           onClick={onConvert}
           disabled={!visible}
-          className="shrink-0 rounded-full bg-charcoal px-5 py-2.5 text-sm font-semibold text-ivory transition-transform active:scale-95"
+          className="btn-primary shrink-0 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-transform active:scale-95"
         >
           움직임으로 바꾸기
         </button>

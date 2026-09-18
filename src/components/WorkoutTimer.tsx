@@ -44,7 +44,7 @@ export function WorkoutTimer({
             isRunning ? 'ring-teal/30' : 'ring-navy/10'
           }`}
         >
-          <span className="text-5xl font-bold tabular-nums text-charcoal sm:text-6xl">
+          <span className="font-display text-5xl tabular-nums text-charcoal sm:text-6xl">
             {formatTime(elapsedSeconds)}
           </span>
         </div>
@@ -88,7 +88,7 @@ export function WorkoutTimer({
         <button
           type="button"
           onClick={onComplete}
-          className="w-full rounded-2xl bg-charcoal py-3.5 text-sm font-semibold text-ivory transition-transform active:scale-[0.98]"
+          className="btn-primary w-full rounded-2xl py-3.5 text-sm font-semibold text-white transition-transform active:scale-[0.98]"
         >
           운동 완료
         </button>

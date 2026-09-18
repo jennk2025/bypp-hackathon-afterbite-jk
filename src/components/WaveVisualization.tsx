@@ -1,3 +1,5 @@
+import runnerSilhouette from '../assets/runner-silhouette.jpg';
+
 interface WaveVisualizationProps {
   currentEnergyKcal: number;
   fillPercent: number;
@@ -15,7 +17,37 @@ export function WaveVisualization({
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="relative mx-auto h-52 w-52 overflow-hidden rounded-full bg-white shadow-inner ring-1 ring-navy/10 sm:h-60 sm:w-60">
+      <svg width="0" height="0" className="absolute" aria-hidden="true">
+        <defs>
+          {/* 실루엣 이미지는 흰 배경 위 검은 형태라 마스크로 쓰려면 명암을 뒤집어야 함
+              (마스크는 밝은 부분 = 보임, 어두운 부분 = 가려짐) */}
+          <filter id="afterbite-invert" colorInterpolationFilters="sRGB">
+            <feColorMatrix
+              type="matrix"
+              values="-1 0 0 0 1  0 -1 0 0 1  0 0 -1 0 1  0 0 0 1 0"
+            />
+          </filter>
+          <mask id="afterbite-runner-mask" maskContentUnits="objectBoundingBox">
+            <image
+              href={runnerSilhouette}
+              x="0"
+              y="0"
+              width="1"
+              height="1"
+              preserveAspectRatio="xMidYMax meet"
+              filter="url(#afterbite-invert)"
+            />
+          </mask>
+        </defs>
+      </svg>
+
+      <div
+        className="wave-glow relative mx-auto h-56 w-52 bg-white sm:h-64 sm:w-60"
+        style={{
+          maskImage: 'url(#afterbite-runner-mask)',
+          WebkitMaskImage: 'url(#afterbite-runner-mask)',
+        }}
+      >
         <div
           className="wave-fill-transition absolute inset-x-0 bottom-0"
           style={{ height: `${clamped}%` }}
@@ -52,16 +84,14 @@ export function WaveVisualization({
           </div>
           <div className="absolute inset-x-0 bottom-0 top-3 bg-gradient-to-b from-teal to-aqua" />
         </div>
+      </div>
 
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
-          <span className="text-[11px] font-medium tracking-wide text-navy/60">
-            현재 참고 에너지
-          </span>
-          <span className="text-3xl font-bold text-charcoal drop-shadow-sm sm:text-4xl">
-            {Math.round(currentEnergyKcal)}
-            <span className="ml-0.5 text-base font-semibold">kcal</span>
-          </span>
-        </div>
+      <div className="text-center">
+        <span className="text-[11px] font-medium tracking-wide text-navy/60">현재 참고 에너지</span>
+        <p className="font-display text-3xl text-charcoal sm:text-4xl">
+          {Math.round(currentEnergyKcal)}
+          <span className="ml-0.5 text-base font-semibold text-navy-soft">kcal</span>
+        </p>
       </div>
 
       <div className="flex items-center gap-6 text-center">
