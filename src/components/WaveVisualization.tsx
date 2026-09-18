@@ -289,7 +289,7 @@ export function WaveVisualization({
       <div className="-mt-[3px] flex items-center gap-6 text-center lg:mt-0 lg:gap-8">
         <div>
           <p className="text-xl font-bold text-charcoal lg:text-2xl">{snackCount}</p>
-          <p className="text-xs text-navy-soft lg:text-sm">오늘 기록한 간식</p>
+          <p className="text-xs text-navy-soft lg:text-sm">기록한 간식</p>
         </div>
         <div className="h-8 w-px bg-navy/10 lg:h-10" />
         <button
