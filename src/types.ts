@@ -58,7 +58,6 @@ export interface InProgressWorkout {
   snackRemainingSnapshot: Record<string, number>;
   elapsedSeconds: number;
   status: 'running' | 'paused';
-  currentStepIndex: number;
   savedAt: string;
 }
 

@@ -129,7 +129,6 @@ export function useWorkoutFlow({
           snackRemainingSnapshot,
           elapsedSeconds: 0,
           status: 'running',
-          currentStepIndex: 0,
           savedAt: new Date().toISOString(),
         },
       };
@@ -165,20 +164,6 @@ export function useWorkoutFlow({
           }
         : prev
     );
-  }
-
-  function nextStep() {
-    setState((prev) => {
-      if (!prev.inProgressWorkout) return prev;
-      const max = prev.inProgressWorkout.routine.steps.length - 1;
-      return {
-        ...prev,
-        inProgressWorkout: {
-          ...prev.inProgressWorkout,
-          currentStepIndex: Math.min(max, prev.inProgressWorkout.currentStepIndex + 1),
-        },
-      };
-    });
   }
 
   function completeWorkout() {
@@ -261,6 +246,16 @@ export function useWorkoutFlow({
     setJustCompletedId(null);
   }
 
+  // 완료 기록 화면에서 개별 기록을 지울 때 사용합니다. 이미 지난 완료 기록이라 간식의
+  // remainingCalories는 되돌리지 않고, 기록 목록에서만 제거합니다.
+  function deleteCompletedWorkout(id: string) {
+    setState((prev) => ({
+      ...prev,
+      completedWorkouts: prev.completedWorkouts.filter((w) => w.id !== id),
+    }));
+    if (justCompletedId === id) setJustCompletedId(null);
+  }
+
   return {
     routines,
     isRecommendingRoutines,
@@ -272,9 +267,9 @@ export function useWorkoutFlow({
     completeRoutineWithoutTimer,
     pauseResumeWorkout,
     pauseAndBrowseRoutines,
-    nextStep,
     completeWorkout,
     cancelWorkout,
     undoLastCompletion,
+    deleteCompletedWorkout,
   };
 }

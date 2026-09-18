@@ -8,13 +8,18 @@ import { AddSnackModal } from './components/AddSnackModal';
 import { MoveConditionForm } from './components/MoveConditionForm';
 import { RoutineSuggestions } from './components/RoutineSuggestions';
 import { WorkoutTimer } from './components/WorkoutTimer';
+import { CompletedWorkoutsModal } from './components/CompletedWorkoutsModal';
 import { loadState, saveState } from './lib/storage';
 import { useEnergyGauge } from './hooks/useEnergyGauge';
 import { useSnackTray } from './hooks/useSnackTray';
 import { useWorkoutFlow } from './hooks/useWorkoutFlow';
 import type { AppState, Screen } from './types';
 
-type ModalState = { type: 'add' } | { type: 'edit'; snackId: string } | null;
+type ModalState =
+  | { type: 'add' }
+  | { type: 'edit'; snackId: string }
+  | { type: 'completedWorkouts' }
+  | null;
 
 function formatMmSs(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60);
@@ -107,10 +112,8 @@ export default function App() {
             routine={inProgress.routine}
             elapsedSeconds={inProgress.elapsedSeconds}
             isRunning={inProgress.status === 'running'}
-            currentStepIndex={inProgress.currentStepIndex}
             onPauseResume={workout.pauseResumeWorkout}
             onBrowseRoutines={workout.pauseAndBrowseRoutines}
-            onNextStep={workout.nextStep}
             onComplete={workout.completeWorkout}
             onCancel={workout.cancelWorkout}
           />
@@ -141,6 +144,7 @@ export default function App() {
         fillPercent={fillPercent}
         snackCount={state.snacks.length}
         completedWorkoutCount={state.completedWorkouts.length}
+        onCompletedWorkoutsClick={() => setModal({ type: 'completedWorkouts' })}
       />
 
       <BalanceScale percent={fillPercent} />
@@ -274,6 +278,13 @@ export default function App() {
             tray.editSnack(editingSnack.id, input);
             setModal(null);
           }}
+        />
+      )}
+      {modal?.type === 'completedWorkouts' && (
+        <CompletedWorkoutsModal
+          workouts={state.completedWorkouts}
+          onDelete={workout.deleteCompletedWorkout}
+          onClose={() => setModal(null)}
         />
       )}
     </div>

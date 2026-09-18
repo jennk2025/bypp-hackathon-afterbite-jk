@@ -5,6 +5,7 @@ interface WaveVisualizationProps {
   fillPercent: number;
   snackCount: number;
   completedWorkoutCount: number;
+  onCompletedWorkoutsClick: () => void;
 }
 
 type Stage = 'light' | 'rising' | 'heavy';
@@ -100,6 +101,7 @@ export function WaveVisualization({
   fillPercent,
   snackCount,
   completedWorkoutCount,
+  onCompletedWorkoutsClick,
 }: WaveVisualizationProps) {
   const clamped = Math.max(0, Math.min(100, fillPercent));
   const theme = getDynamicTheme(clamped);
@@ -266,10 +268,14 @@ export function WaveVisualization({
           <p className="text-xs text-navy-soft">오늘 기록한 간식</p>
         </div>
         <div className="h-8 w-px bg-navy/10" />
-        <div>
+        <button
+          type="button"
+          onClick={onCompletedWorkoutsClick}
+          className="rounded-xl px-2 py-1 transition-colors hover:bg-navy/5 active:scale-95"
+        >
           <p className="text-xl font-bold text-charcoal">{completedWorkoutCount}</p>
           <p className="text-xs text-navy-soft">완료한 움직임</p>
-        </div>
+        </button>
       </div>
 
       <p className="max-w-xs text-center text-[11px] leading-relaxed text-navy-soft">

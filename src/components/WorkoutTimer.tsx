@@ -4,10 +4,8 @@ interface WorkoutTimerProps {
   routine: ExerciseRoutine;
   elapsedSeconds: number;
   isRunning: boolean;
-  currentStepIndex: number;
   onPauseResume: () => void;
   onBrowseRoutines: () => void;
-  onNextStep: () => void;
   onComplete: () => void;
   onCancel: () => void;
 }
@@ -22,16 +20,11 @@ export function WorkoutTimer({
   routine,
   elapsedSeconds,
   isRunning,
-  currentStepIndex,
   onPauseResume,
   onBrowseRoutines,
-  onNextStep,
   onComplete,
   onCancel,
 }: WorkoutTimerProps) {
-  const currentStep = routine.steps[currentStepIndex] ?? routine.steps[routine.steps.length - 1];
-  const remainingSteps = routine.steps.slice(currentStepIndex + 1);
-  const isLastStep = currentStepIndex >= routine.steps.length - 1;
   const targetSeconds = routine.durationMinutes * 60;
   const isGoalReached = elapsedSeconds >= targetSeconds;
 
@@ -81,31 +74,16 @@ export function WorkoutTimer({
       </div>
 
       <div className="rounded-2xl bg-teal/10 px-4 py-4">
-        <p className="text-[11px] font-semibold text-teal">지금 동작</p>
-        <p className="mt-1 text-base font-bold text-charcoal">{currentStep}</p>
+        <p className="text-[11px] font-semibold text-teal">운동 순서</p>
+        <ol className="mt-2 space-y-1.5">
+          {routine.steps.map((step, idx) => (
+            <li key={idx} className="text-sm text-charcoal">
+              <span className="mr-1.5 font-semibold text-teal">{idx + 1}.</span>
+              {step}
+            </li>
+          ))}
+        </ol>
       </div>
-
-      {remainingSteps.length > 0 && (
-        <div className="mt-4">
-          <p className="mb-2 text-[11px] font-semibold text-navy-soft">다음 동작</p>
-          <ul className="space-y-1.5">
-            {remainingSteps.map((step, idx) => (
-              <li key={idx} className="text-sm text-navy-soft">
-                {step}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <button
-        type="button"
-        onClick={onNextStep}
-        disabled={isLastStep}
-        className="mt-4 self-start rounded-full border border-navy/15 px-4 py-1.5 text-xs font-medium text-navy-soft disabled:opacity-30"
-      >
-        다음 동작으로 →
-      </button>
 
       <div className="mt-auto flex flex-col gap-2.5 pt-6">
         <button
