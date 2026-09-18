@@ -1,5 +1,10 @@
 // Vercel 서버리스 함수 (Node.js 런타임)로 배포됩니다.
 // Gemini API 키는 여기(서버 쪽 환경변수)에만 존재하며 브라우저로 절대 전달되지 않습니다.
+//
+// 실제 로직은 runAnalyzeSnack()에 있고, 아래 default export는 그걸 Vercel의
+// (req, res) 시그니처로 감싸는 얇은 어댑터입니다. vite-plugins/apiDevServer.ts가
+// `npm run dev` 중에도 runAnalyzeSnack()을 그대로 불러 써서, 로컬에서도 실제
+// Gemini 연동 코드를 그대로 태워볼 수 있습니다(배포 때만 동작하는 handler를 거치지 않고).
 
 const GEMINI_MODEL = 'gemini-2.0-flash';
 
@@ -8,22 +13,20 @@ const PROMPT = `이 사진은 과자·음료·아이스크림 등 간식의 포�
 {"name": "제품명 또는 빈 문자열", "caloriesPerServing": 1회 제공량 기준 칼로리(숫자) 또는 null, "servingSizeLabel": "1회 제공량 설명 또는 빈 문자열"}
 확실하지 않은 값은 추측하지 말고 null 또는 빈 문자열로 답하세요.`;
 
-export default async function handler(req: any, res: any) {
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
-    return;
-  }
+export interface ApiResult {
+  status: number;
+  body: Record<string, unknown>;
+}
 
+export async function runAnalyzeSnack(body: any): Promise<ApiResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    res.status(500).json({ error: 'Server not configured' });
-    return;
+    return { status: 500, body: { error: 'Server not configured' } };
   }
 
-  const { imageBase64, mimeType } = req.body ?? {};
+  const { imageBase64, mimeType } = body ?? {};
   if (!imageBase64 || typeof imageBase64 !== 'string') {
-    res.status(400).json({ error: 'imageBase64 required' });
-    return;
+    return { status: 400, body: { error: 'imageBase64 required' } };
   }
 
   try {
@@ -47,21 +50,32 @@ export default async function handler(req: any, res: any) {
     );
 
     if (!geminiRes.ok) {
-      res.status(502).json({ error: 'Gemini request failed' });
-      return;
+      return { status: 502, body: { error: 'Gemini request failed' } };
     }
 
     const data = await geminiRes.json();
     const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
     const parsed = JSON.parse(text);
 
-    res.status(200).json({
-      name: typeof parsed.name === 'string' ? parsed.name : '',
-      caloriesPerServing:
-        typeof parsed.caloriesPerServing === 'number' ? parsed.caloriesPerServing : null,
-      servingSizeLabel: typeof parsed.servingSizeLabel === 'string' ? parsed.servingSizeLabel : '',
-    });
+    return {
+      status: 200,
+      body: {
+        name: typeof parsed.name === 'string' ? parsed.name : '',
+        caloriesPerServing:
+          typeof parsed.caloriesPerServing === 'number' ? parsed.caloriesPerServing : null,
+        servingSizeLabel: typeof parsed.servingSizeLabel === 'string' ? parsed.servingSizeLabel : '',
+      },
+    };
   } catch {
-    res.status(500).json({ error: 'Unexpected error analyzing image' });
+    return { status: 500, body: { error: 'Unexpected error analyzing image' } };
   }
+}
+
+export default async function handler(req: any, res: any) {
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+  const result = await runAnalyzeSnack(req.body);
+  res.status(result.status).json(result.body);
 }

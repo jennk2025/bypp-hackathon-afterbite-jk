@@ -51,25 +51,85 @@ function parseOcrText(rawText: string): OcrResult {
   };
 }
 
+const FAILED_OCR_RESULT: OcrResult = {
+  success: false,
+  rawText: '',
+  nameGuess: '',
+  caloriesGuess: null,
+  servingSizeGuess: '',
+  matchedDbEntry: null,
+};
+
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
+}
+
+// Tesseract는 kor+eng 언어 데이터(수 MB)와 core wasm을 매번 CDN에서 새로 받아오면
+// 모바일 회선에서 체감상 "인식을 아예 못 하는" 수준으로 느려질 수 있어, 워커를 한 번만
+// 만들어 세션 동안 재사용합니다. 실패하면 다음 시도 때 새 워커로 다시 시작합니다.
+let workerPromise: ReturnType<typeof createWorker> | null = null;
+
+function getWorker() {
+  if (!workerPromise) {
+    workerPromise = createWorker('kor+eng').catch((err) => {
+      workerPromise = null;
+      throw err;
+    });
+  }
+  return workerPromise;
+}
+
+// 사진 원본 해상도(특히 카메라로 직접 찍은 사진)가 크면 OCR이 눈에 띄게 느려지므로,
+// 텍스트를 읽는 데 충분한 크기로 미리 축소합니다.
+async function downscaleForOcr(file: File, maxDimension = 1200): Promise<File> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+    if (scale >= 1) {
+      bitmap.close();
+      return file;
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      bitmap.close();
+      return file;
+    }
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+    return blob ? new File([blob], file.name || 'snack-photo.jpg', { type: 'image/jpeg' }) : file;
+  } catch {
+    return file;
+  }
+}
+
 export async function recognizeSnackPhoto(file: File): Promise<OcrResult> {
   try {
-    const worker = await createWorker('kor+eng');
-    try {
-      const {
-        data: { text },
-      } = await worker.recognize(file);
-      return parseOcrText(text ?? '');
-    } finally {
-      await worker.terminate();
-    }
+    const processedFile = await downscaleForOcr(file);
+    const worker = await withTimeout(getWorker(), 20000, 'OCR worker를 준비하지 못했어요');
+    const {
+      data: { text },
+    } = await withTimeout(worker.recognize(processedFile), 20000, 'OCR 인식이 너무 오래 걸려요');
+    return parseOcrText(text ?? '');
   } catch {
-    return {
-      success: false,
-      rawText: '',
-      nameGuess: '',
-      caloriesGuess: null,
-      servingSizeGuess: '',
-      matchedDbEntry: null,
-    };
+    // 타임아웃/오류 시 다음 시도에서 새 워커로 다시 시작하도록 리셋합니다.
+    workerPromise = null;
+    return FAILED_OCR_RESULT;
   }
 }

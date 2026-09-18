@@ -88,6 +88,7 @@ export default function App() {
             isLoading={workout.isRecommendingRoutines}
             onBack={() => setScreen('tray')}
             onSelect={workout.handleRoutineSelect}
+            onCompleteWithoutTimer={workout.completeRoutineWithoutTimer}
             onRetry={workout.handleRetryRoutines}
           />
         </div>
@@ -152,7 +153,7 @@ export default function App() {
               onClick={workout.cancelWorkout}
               className="rounded-full px-3 py-1.5 text-xs font-medium text-navy-soft"
             >
-              그만두기
+              취소하기
             </button>
             <button
               type="button"

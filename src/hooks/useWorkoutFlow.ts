@@ -1,7 +1,46 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 import { generateId } from '../lib/id';
 import { recommendRoutines } from '../lib/routineVision';
-import type { AppState, ExerciseRoutine, MoveConditions, Screen } from '../types';
+import type { AppState, CompletedWorkoutRecord, ExerciseRoutine, MoveConditions, Screen, Snack } from '../types';
+
+// completeWorkout(타이머로 진행 중이던 운동 완료)과 completeRoutineWithoutTimer(타이머 없이 바로
+// 완료 기록)가 공유하는 계산: 태운 칼로리(중간값)를 선택된 간식 순서대로 다 채울 때까지 나눠
+// 차감합니다. 다 태우지 못한 간식은 완료 처리하지 않고, 남은 만큼만 줄여 다시 선택할 수 있게 둡니다.
+function applyRoutineCompletion(
+  snacks: Snack[],
+  routine: ExerciseRoutine,
+  snackIds: string[],
+  snackRemainingSnapshot: Record<string, number>
+): { snacks: Snack[]; completedWorkout: CompletedWorkoutRecord } {
+  let remainingBurn = (routine.estBurnLowKcal + routine.estBurnHighKcal) / 2;
+  const updatedSnacks = snacks.map((s) => {
+    if (!snackIds.includes(s.id)) return s;
+    const before = snackRemainingSnapshot[s.id] ?? s.remainingCalories;
+    if (remainingBurn <= 0) {
+      return { ...s, exerciseStatus: 'none' as const, remainingCalories: before };
+    }
+    if (remainingBurn >= before) {
+      remainingBurn -= before;
+      return { ...s, exerciseStatus: 'completed' as const, remainingCalories: 0 };
+    }
+    const after = before - remainingBurn;
+    remainingBurn = 0;
+    return { ...s, exerciseStatus: 'none' as const, remainingCalories: after };
+  });
+
+  return {
+    snacks: updatedSnacks,
+    completedWorkout: {
+      id: generateId(),
+      routineName: routine.name,
+      snackIds,
+      snackRemainingSnapshot,
+      burnedLowKcal: routine.estBurnLowKcal,
+      burnedHighKcal: routine.estBurnHighKcal,
+      completedAt: new Date().toISOString(),
+    },
+  };
+}
 
 interface UseWorkoutFlowParams {
   state: AppState;
@@ -123,45 +162,45 @@ export function useWorkoutFlow({
     setState((prev) => {
       if (!prev.inProgressWorkout) return prev;
       const { routine, snackIds, snackRemainingSnapshot } = prev.inProgressWorkout;
-      const recordId = generateId();
-      setJustCompletedId(recordId);
-
-      // 태운 칼로리(중간값)를 선택된 간식 순서대로 다 채울 때까지 나눠 차감합니다.
-      // 다 태우지 못한 간식은 완료 처리하지 않고, 남은 만큼만 줄여 다시 선택할 수 있게 둡니다.
-      let remainingBurn = (routine.estBurnLowKcal + routine.estBurnHighKcal) / 2;
-      const snacks = prev.snacks.map((s) => {
-        if (!snackIds.includes(s.id)) return s;
-        const before = snackRemainingSnapshot[s.id] ?? s.remainingCalories;
-        if (remainingBurn <= 0) {
-          return { ...s, exerciseStatus: 'none' as const, remainingCalories: before };
-        }
-        if (remainingBurn >= before) {
-          remainingBurn -= before;
-          return { ...s, exerciseStatus: 'completed' as const, remainingCalories: 0 };
-        }
-        const after = before - remainingBurn;
-        remainingBurn = 0;
-        return { ...s, exerciseStatus: 'none' as const, remainingCalories: after };
-      });
-
+      const { snacks, completedWorkout } = applyRoutineCompletion(
+        prev.snacks,
+        routine,
+        snackIds,
+        snackRemainingSnapshot
+      );
+      setJustCompletedId(completedWorkout.id);
       return {
         ...prev,
         snacks,
-        completedWorkouts: [
-          ...prev.completedWorkouts,
-          {
-            id: recordId,
-            routineName: routine.name,
-            snackIds,
-            snackRemainingSnapshot,
-            burnedLowKcal: routine.estBurnLowKcal,
-            burnedHighKcal: routine.estBurnHighKcal,
-            completedAt: new Date().toISOString(),
-          },
-        ],
+        completedWorkouts: [...prev.completedWorkouts, completedWorkout],
         inProgressWorkout: null,
       };
     });
+    setScreen('tray');
+  }
+
+  // 타이머를 켜고 기다리기 귀찮을 때, 루틴 추천 화면에서 바로 "완료로 기록"할 수 있는 지름길입니다.
+  // 실제로 운동을 진행하지 않으므로 완료 배너의 "완료 취소"로 언제든 되돌릴 수 있음을 함께 알립니다.
+  function completeRoutineWithoutTimer(routine: ExerciseRoutine) {
+    const snackIds = Array.from(selectedIds);
+    setState((prev) => {
+      const snackRemainingSnapshot = Object.fromEntries(
+        snackIds.map((id) => [id, prev.snacks.find((s) => s.id === id)?.remainingCalories ?? 0])
+      );
+      const { snacks, completedWorkout } = applyRoutineCompletion(
+        prev.snacks,
+        routine,
+        snackIds,
+        snackRemainingSnapshot
+      );
+      setJustCompletedId(completedWorkout.id);
+      return {
+        ...prev,
+        snacks,
+        completedWorkouts: [...prev.completedWorkouts, completedWorkout],
+      };
+    });
+    clearSelection();
     setScreen('tray');
   }
 
@@ -207,6 +246,7 @@ export function useWorkoutFlow({
     handleConditionsSubmit,
     handleRetryRoutines,
     handleRoutineSelect,
+    completeRoutineWithoutTimer,
     pauseResumeWorkout,
     nextStep,
     completeWorkout,

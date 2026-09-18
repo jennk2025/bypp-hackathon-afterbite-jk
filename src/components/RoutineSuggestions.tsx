@@ -5,10 +5,18 @@ interface RoutineSuggestionsProps {
   isLoading: boolean;
   onBack: () => void;
   onSelect: (routine: ExerciseRoutine) => void;
+  onCompleteWithoutTimer: (routine: ExerciseRoutine) => void;
   onRetry: () => void;
 }
 
-export function RoutineSuggestions({ routines, isLoading, onBack, onSelect, onRetry }: RoutineSuggestionsProps) {
+export function RoutineSuggestions({
+  routines,
+  isLoading,
+  onBack,
+  onSelect,
+  onCompleteWithoutTimer,
+  onRetry,
+}: RoutineSuggestionsProps) {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-10 pt-6">
       <div className="mb-5 flex items-center gap-3">
@@ -67,6 +75,13 @@ export function RoutineSuggestions({ routines, isLoading, onBack, onSelect, onRe
               className="btn-primary mt-4 w-full rounded-xl py-2.5 text-sm font-semibold text-white transition-transform active:scale-[0.98]"
             >
               이 루틴 시작하기
+            </button>
+            <button
+              type="button"
+              onClick={() => onCompleteWithoutTimer(routine)}
+              className="mt-2 w-full rounded-xl py-2 text-xs font-medium text-navy-soft transition-colors active:scale-[0.98]"
+            >
+              타이머 없이 완료로 기록하기
             </button>
           </div>
         ))}

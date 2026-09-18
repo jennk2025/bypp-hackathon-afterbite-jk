@@ -1,5 +1,10 @@
 // Vercel 서버리스 함수 (Node.js 런타임)로 배포됩니다.
 // Gemini API 키는 여기(서버 쪽 환경변수)에만 존재하며 브라우저로 절대 전달되지 않습니다.
+//
+// 실제 로직은 runRecommendRoutine()에 있고, 아래 default export는 그걸 Vercel의
+// (req, res) 시그니처로 감싸는 얇은 어댑터입니다. vite-plugins/apiDevServer.ts가
+// `npm run dev` 중에도 runRecommendRoutine()을 그대로 불러 써서, 로컬에서도 실제
+// Gemini 연동 코드를 그대로 태워볼 수 있습니다.
 
 const GEMINI_MODEL = 'gemini-2.0-flash';
 
@@ -51,22 +56,20 @@ function buildPrompt(body: {
 estBurnLowKcal은 estBurnHighKcal보다 작거나 같아야 하고, 두 값 모두 0보다 커야 합니다.`;
 }
 
-export default async function handler(req: any, res: any) {
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
-    return;
-  }
+export interface ApiResult {
+  status: number;
+  body: Record<string, unknown>;
+}
 
+export async function runRecommendRoutine(body: any): Promise<ApiResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    res.status(500).json({ error: 'Server not configured' });
-    return;
+    return { status: 500, body: { error: 'Server not configured' } };
   }
 
-  const { minutes, place, intensity, noiseOk, jumpOk, totalCalories } = req.body ?? {};
+  const { minutes, place, intensity, noiseOk, jumpOk, totalCalories } = body ?? {};
   if (typeof minutes !== 'number' || typeof place !== 'string' || typeof intensity !== 'string') {
-    res.status(400).json({ error: 'minutes, place, intensity required' });
-    return;
+    return { status: 400, body: { error: 'minutes, place, intensity required' } };
   }
 
   try {
@@ -98,8 +101,7 @@ export default async function handler(req: any, res: any) {
     );
 
     if (!geminiRes.ok) {
-      res.status(502).json({ error: 'Gemini request failed' });
-      return;
+      return { status: 502, body: { error: 'Gemini request failed' } };
     }
 
     const data = await geminiRes.json();
@@ -107,8 +109,7 @@ export default async function handler(req: any, res: any) {
     const parsed = JSON.parse(text);
     const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.routines) ? parsed.routines : null;
     if (!list) {
-      res.status(502).json({ error: 'Unexpected Gemini response shape' });
-      return;
+      return { status: 502, body: { error: 'Unexpected Gemini response shape' } };
     }
 
     const routines = list
@@ -122,8 +123,17 @@ export default async function handler(req: any, res: any) {
       }))
       .slice(0, 3);
 
-    res.status(200).json({ routines });
+    return { status: 200, body: { routines } };
   } catch {
-    res.status(500).json({ error: 'Unexpected error recommending routines' });
+    return { status: 500, body: { error: 'Unexpected error recommending routines' } };
   }
+}
+
+export default async function handler(req: any, res: any) {
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+  const result = await runRecommendRoutine(req.body);
+  res.status(result.status).json(result.body);
 }

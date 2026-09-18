@@ -30,6 +30,8 @@ export function WorkoutTimer({
   const currentStep = routine.steps[currentStepIndex] ?? routine.steps[routine.steps.length - 1];
   const remainingSteps = routine.steps.slice(currentStepIndex + 1);
   const isLastStep = currentStepIndex >= routine.steps.length - 1;
+  const targetSeconds = routine.durationMinutes * 60;
+  const isGoalReached = elapsedSeconds >= targetSeconds;
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-10 pt-8">
@@ -39,14 +41,23 @@ export function WorkoutTimer({
       </p>
 
       <div className="my-8 flex flex-col items-center">
+        {isGoalReached && (
+          <p className="mb-3 rounded-full bg-teal/15 px-3 py-1 text-xs font-semibold text-teal">
+            🎉 목표 시간 달성! 완료 버튼을 눌러 기록해요
+          </p>
+        )}
         <div
           className={`flex h-48 w-48 items-center justify-center rounded-full bg-ivory-card shadow-inner ring-4 sm:h-56 sm:w-56 ${
-            isRunning ? 'ring-teal/30' : 'ring-navy/10'
+            isGoalReached ? 'ring-teal' : isRunning ? 'ring-teal/30' : 'ring-navy/10'
           }`}
         >
-          <span className="font-display text-5xl tabular-nums text-charcoal sm:text-6xl">
-            {formatTime(elapsedSeconds)}
-          </span>
+          {isGoalReached ? (
+            <span className="font-display text-3xl font-bold text-teal sm:text-4xl">DONE</span>
+          ) : (
+            <span className="font-display text-5xl tabular-nums text-charcoal sm:text-6xl">
+              {formatTime(elapsedSeconds)}
+            </span>
+          )}
         </div>
       </div>
 
@@ -88,16 +99,18 @@ export function WorkoutTimer({
         <button
           type="button"
           onClick={onComplete}
-          className="btn-primary w-full rounded-2xl py-3.5 text-sm font-semibold text-white transition-transform active:scale-[0.98]"
+          className={`btn-primary w-full rounded-2xl py-3.5 text-sm font-semibold text-white transition-transform active:scale-[0.98] ${
+            isGoalReached ? 'animate-pulse' : ''
+          }`}
         >
-          운동 완료
+          {isGoalReached ? '✅ 운동 완료로 기록하기' : '운동 완료'}
         </button>
         <button
           type="button"
           onClick={onCancel}
           className="w-full rounded-2xl py-2.5 text-sm font-medium text-navy-soft"
         >
-          취소하고 나가기
+          취소하기
         </button>
       </div>
     </div>
