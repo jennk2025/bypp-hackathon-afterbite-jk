@@ -229,7 +229,7 @@ export default function App() {
           )}
 
           <div className={`flex items-center justify-between ${inProgress || workout.justCompletedId ? 'mt-6' : ''}`}>
-            <h2 className="text-sm font-bold text-charcoal lg:text-base">간식 트레이</h2>
+            <h2 className="text-sm font-bold text-charcoal lg:text-base">나의 간식 트레이</h2>
             <div className="flex gap-2">
               {tray.selectableSnacks.length > 0 && (
                 <button
