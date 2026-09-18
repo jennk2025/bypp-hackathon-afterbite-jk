@@ -1,20 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ivory: #080c16;
-  --color-ivory-card: #101828;
-  --color-header: #30447a;
-  --color-charcoal: #eef1f7;
-  --color-navy: #eef1f7;
-  --color-navy-soft: #b3bcd4;
-  --color-teal: #2dd4bf;
-  --color-aqua: #38bdf8;
-  --color-lavender: #a3e635;
-  --color-lavender-soft: #1c2b10;
+  --color-ivory: #fff6ec;
+  --color-ivory-card: #fffdf8;
+  --color-header: #fffbf5;
+  --color-charcoal: #4a3728;
+  --color-navy: #4a3728;
+  --color-navy-soft: #8a6e58;
+  --color-teal: #ff7a59;
+  --color-aqua: #ffb347;
+  --color-lavender: #c9b6ff;
+  --color-lavender-soft: #ede7ff;
   --font-sans:
     'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Space Grotesk', 'Pretendard', -apple-system, sans-serif;
-  --font-brand: 'Syne', 'Space Grotesk', 'Pretendard', -apple-system, sans-serif;
+  --font-display: 'Baloo 2', 'Pretendard', -apple-system, sans-serif;
+  --font-brand: 'Jua', 'Pretendard', -apple-system, sans-serif;
 }
 
 html,
@@ -26,13 +26,8 @@ body,
 body {
   background-color: var(--color-ivory);
   background-image:
-    radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
-    radial-gradient(circle at 50% 26%, rgba(148, 163, 253, 0.18), transparent 60%),
-    linear-gradient(160deg, #202f57 0%, #16213f 30%, #0f172e 60%, #080b17 100%);
-  background-size:
-    22px 22px,
-    100% 100%,
-    100% 100%;
+    radial-gradient(circle at 50% 0%, rgba(255, 194, 107, 0.16), transparent 55%),
+    linear-gradient(180deg, #fff8ef 0%, #ffefdd 40%, #fff6ec 100%);
   background-attachment: fixed;
   color: var(--color-navy);
   font-family: var(--font-sans);
@@ -63,15 +58,15 @@ body {
 }
 
 .btn-primary {
-  background-image: linear-gradient(135deg, var(--color-teal), var(--color-aqua));
-  box-shadow: 0 12px 28px -10px rgba(20, 184, 166, 0.5);
+  background-image: linear-gradient(90deg, var(--color-teal), var(--color-aqua));
+  box-shadow: 0 12px 28px -10px rgba(255, 122, 89, 0.45);
 }
 
 .btn-primary:hover {
-  box-shadow: 0 14px 32px -8px rgba(20, 184, 166, 0.6);
+  box-shadow: 0 14px 32px -8px rgba(255, 122, 89, 0.55);
 }
 
-/* 배경 장식: 어두운 화면 구석에 번지는 청록·라임 글로우 + 은은한 중앙 스팟 */
+/* 배경 장식: 크림 배경 위로 은은하게 번지는 파스텔 블롭 3개 */
 .bg-decor {
   position: fixed;
   inset: 0;
@@ -91,7 +86,7 @@ body {
 .bg-decor::before {
   width: 26rem;
   height: 26rem;
-  background: radial-gradient(circle, rgba(45, 212, 191, 0.34), transparent 70%);
+  background: radial-gradient(circle, rgba(196, 181, 253, 0.35), transparent 70%);
   top: -7rem;
   right: -6rem;
 }
@@ -99,7 +94,7 @@ body {
 .bg-decor::after {
   width: 29rem;
   height: 29rem;
-  background: radial-gradient(circle, rgba(163, 230, 53, 0.22), transparent 70%);
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.24), transparent 70%);
   bottom: -10rem;
   left: -9rem;
 }
@@ -112,16 +107,47 @@ body {
   height: 34rem;
   transform: translate(-50%, -50%);
   border-radius: 9999px;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.26), transparent 70%);
+  background: radial-gradient(circle, rgba(125, 211, 252, 0.32), transparent 70%);
   filter: blur(55px);
   z-index: -1;
   pointer-events: none;
 }
 
+/* 캐릭터 주위를 떠다니는 간식 스티커 + 반짝임 (순수 장식용, 데이터 없음) */
+@keyframes float-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-9px) rotate(3deg);
+  }
+}
+
+@keyframes sparkle-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.6) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15) rotate(14deg);
+  }
+}
+
+.float-sticker {
+  animation: float-bob 3.2s ease-in-out infinite;
+}
+
+.sparkle-icon {
+  animation: sparkle-twinkle 2.2s ease-in-out infinite;
+}
+
 .wave-glow {
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 25px 70px -16px var(--glow-color, rgba(45, 212, 191, 0.55));
+    0 25px 70px -16px var(--glow-color, rgba(255, 154, 118, 0.45));
   transition:
     box-shadow 700ms ease,
     filter 700ms ease;
@@ -138,7 +164,7 @@ body {
   inset: -20%;
   z-index: -1;
   border-radius: 9999px;
-  background: radial-gradient(circle, var(--halo-color, rgba(45, 212, 191, 0.4)), transparent 68%);
+  background: radial-gradient(circle, var(--halo-color, rgba(255, 154, 118, 0.4)), transparent 68%);
   filter: blur(32px);
   pointer-events: none;
   transition: background 700ms ease;
@@ -151,7 +177,7 @@ body {
   top: 50%;
   left: 50%;
   border-radius: 9999px;
-  border: 1.5px solid var(--halo-color, rgba(45, 212, 191, 0.3));
+  border: 1.5px solid var(--halo-color, rgba(255, 154, 118, 0.3));
   pointer-events: none;
   transition: border-color 700ms ease;
 }
@@ -192,8 +218,8 @@ body {
   height: 36px;
   padding: 3px;
   border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(74, 55, 40, 0.12);
+  background: rgba(74, 55, 40, 0.05);
   cursor: pointer;
 }
 
@@ -205,12 +231,45 @@ body {
   height: 30px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--color-teal), var(--color-aqua));
-  box-shadow: 0 4px 12px rgba(45, 212, 191, 0.5);
+  box-shadow: 0 4px 12px rgba(255, 122, 89, 0.45);
   transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .gender-switch[data-on='true'] .gender-switch-thumb {
   transform: translateX(36px);
+}
+
+/* 0~100% 균형 게이지 막대 (낮을수록 건강한 쪽) */
+.balance-track {
+  position: relative;
+  padding-top: 10px;
+}
+
+.balance-marker {
+  position: absolute;
+  top: 0;
+  width: 14px;
+  height: 14px;
+  transition: left 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.balance-bar {
+  display: flex;
+  align-items: center;
+  height: 22px;
+  background: rgba(74, 55, 40, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.balance-bar .zone {
+  height: 12px;
+}
+
+.balance-bar .zone.mid {
+  height: 22px;
+  border-radius: 6px;
+  margin: 0 1px;
 }
 
 @media (prefers-reduced-motion: reduce) {

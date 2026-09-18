@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { SNACK_DB } from '../data/snackDatabase';
 import { analyzeSnackPhoto } from '../lib/snackVision';
 import { buildPortionPresets } from '../lib/portion';
-import { CameraCapture } from './CameraCapture';
 import type { Snack, SnackSource } from '../types';
 
 export interface SnackFormInput {
@@ -21,7 +20,7 @@ interface AddSnackModalProps {
   onSave: (input: SnackFormInput) => void;
 }
 
-type Step = 'choose' | 'camera' | 'photo' | 'form';
+type Step = 'choose' | 'photo' | 'form';
 
 export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackModalProps) {
   const [step, setStep] = useState<Step>(mode === 'edit' ? 'form' : 'choose');
@@ -156,23 +155,6 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                 }}
               />
 
-              {/* 실시간 화면 보며 촬영 (웹캠) */}
-              <button
-                type="button"
-                onClick={() => setStep('camera')}
-                className="flex items-center gap-3 rounded-2xl border border-navy/10 bg-ivory-card px-4 py-3.5 text-left shadow-sm transition-transform active:scale-[0.98]"
-              >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-navy/10 text-base">
-                  📹
-                </span>
-                <span>
-                  <span className="block text-sm font-semibold text-charcoal">실시간 화면 보며 촬영</span>
-                  <span className="block text-xs text-navy-soft">
-                    브라우저 화면에서 구도를 보며 찍어요
-                  </span>
-                </span>
-              </button>
-
               {/* 갤러리/파일 사진 업로드 */}
               <button
                 type="button"
@@ -221,10 +203,6 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                 </span>
               </button>
             </div>
-          )}
-
-          {step === 'camera' && (
-            <CameraCapture onCapture={handleFileSelected} onCancel={() => setStep('choose')} />
           )}
 
           {step === 'photo' && (

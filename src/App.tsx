@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AppHeader } from './components/AppHeader';
 import { WaveVisualization, type RunnerCharacter } from './components/WaveVisualization';
+import { BalanceScale } from './components/BalanceScale';
 import { SnackCard } from './components/SnackCard';
 import { SelectionBar } from './components/SelectionBar';
 import { AddSnackModal } from './components/AddSnackModal';
@@ -41,6 +42,14 @@ export default function App() {
     });
   }
 
+  // 헤더 로고를 누르면 어느 화면에 있든 홈으로 돌아가 메인 캐릭터가 있는 위치로 스크롤합니다.
+  function goHome() {
+    setScreen('tray');
+    requestAnimationFrame(() => {
+      document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
   const { currentEnergyKcal, fillPercent } = useEnergyGauge(state.snacks, state.completedWorkouts);
 
   const tray = useSnackTray(setState, state.snacks);
@@ -63,7 +72,7 @@ export default function App() {
       <>
         <div className="bg-decor" aria-hidden="true" />
         <div className="bg-decor-spot" aria-hidden="true" />
-        <AppHeader />
+        <AppHeader onLogoClick={goHome} />
         <div className="pt-14">
           <MoveConditionForm
             totalCalories={tray.selectedTotalCalories}
@@ -81,7 +90,7 @@ export default function App() {
       <>
         <div className="bg-decor" aria-hidden="true" />
         <div className="bg-decor-spot" aria-hidden="true" />
-        <AppHeader />
+        <AppHeader onLogoClick={goHome} />
         <div className="pt-14">
           <RoutineSuggestions
             routines={workout.routines}
@@ -103,7 +112,7 @@ export default function App() {
       <>
         <div className="bg-decor" aria-hidden="true" />
         <div className="bg-decor-spot" aria-hidden="true" />
-        <AppHeader />
+        <AppHeader onLogoClick={goHome} />
         <div className="pt-14">
           <WorkoutTimer
             routine={inProgress.routine}
@@ -122,15 +131,20 @@ export default function App() {
   }
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-md px-5 pb-32 pt-24">
+    <div className="mx-auto min-h-screen w-full max-w-md px-5 pb-32 pt-24 sm:max-w-xl lg:max-w-2xl">
       <div className="bg-decor" aria-hidden="true" />
       <div className="bg-decor-spot" aria-hidden="true" />
-      <AppHeader />
-      <header className="mb-6 text-center">
-        <h1 className="font-brand bg-gradient-to-r from-teal to-aqua bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-6xl">
+      <AppHeader onLogoClick={goHome} />
+      <header className="mb-2 text-center">
+        <p className="text-[11px] font-bold uppercase tracking-[2px] text-navy-soft">오늘의 밸런스</p>
+        <h1 className="font-brand mt-1 bg-gradient-to-r from-teal to-aqua bg-clip-text text-5xl tracking-tight text-transparent sm:text-6xl">
           AFTERBITE
         </h1>
-        <p className="mt-2 text-xs text-navy-soft">가볍게 기록하고, 지금 할 수 있는 만큼만 움직여요</p>
+        <p className="mx-auto mt-2 max-w-xs text-xs leading-relaxed text-navy-soft">
+          죄책감은 내려놓고, 가볍게 기록하고 비워내요.
+          <br />
+          0%가 되면 완전 건강한 상태예요! 🌱
+        </p>
       </header>
 
       <WaveVisualization
@@ -141,6 +155,8 @@ export default function App() {
         character={character}
         onToggleCharacter={toggleCharacter}
       />
+
+      <BalanceScale percent={fillPercent} />
 
       {inProgress && (
         <div className="mt-6 flex items-center justify-between gap-3 rounded-2xl border border-lavender bg-lavender-soft px-4 py-3.5">

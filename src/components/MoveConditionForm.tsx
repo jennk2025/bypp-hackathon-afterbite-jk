@@ -63,10 +63,18 @@ export function MoveConditionForm({ totalCalories, snackCount, onBack, onSubmit 
   const [noiseOk, setNoiseOk] = useState(true);
   const [jumpOk, setJumpOk] = useState(true);
 
-  const effectiveMinutes = useCustomMinutes ? Math.max(1, parseInt(customMinutes, 10) || 0) : minutes;
+  const parsedCustomMinutes = parseInt(customMinutes, 10);
+  // 직접 입력이 비어있거나 0 이하이면 임의로 1분 취급하지 않고 0으로 두어 제출 버튼이
+  // 실제로 비활성화되게 합니다. 예전엔 항상 1분으로 슬쩍 대체돼서 사용자가 입력한 값이
+  // 반영 안 되는 것처럼 보였습니다.
+  const effectiveMinutes = useCustomMinutes
+    ? Number.isFinite(parsedCustomMinutes) && parsedCustomMinutes > 0
+      ? parsedCustomMinutes
+      : 0
+    : minutes;
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-28 pt-6">
+    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-28 pt-6 sm:max-w-xl lg:max-w-2xl">
       <div className="mb-5 flex items-center gap-3">
         <button
           type="button"
@@ -185,7 +193,7 @@ export function MoveConditionForm({ totalCalories, snackCount, onBack, onSubmit 
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md px-5 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] pt-3">
+      <div className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md px-5 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] pt-3 sm:max-w-xl lg:max-w-2xl">
         <button
           type="button"
           onClick={() => onSubmit({ minutes: effectiveMinutes, place, intensity, noiseOk, jumpOk })}

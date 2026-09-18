@@ -22,7 +22,7 @@ export function RoutineSuggestions({
   onRetry,
 }: RoutineSuggestionsProps) {
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-10 pt-6">
+    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-10 pt-6 sm:max-w-xl lg:max-w-2xl">
       <div className="mb-4 flex items-center gap-3">
         <button
           type="button"

@@ -36,7 +36,7 @@ export function WorkoutTimer({
   const isGoalReached = elapsedSeconds >= targetSeconds;
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-10 pt-6">
+    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-10 pt-6 sm:max-w-xl lg:max-w-2xl">
       {/* 상단 루틴 목록 바로가기 */}
       <div className="mb-3 flex items-center justify-between">
         <button

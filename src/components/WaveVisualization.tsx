@@ -89,6 +89,15 @@ function getDynamicTheme(percent: number): FillTheme {
   };
 }
 
+const STICKERS: { emoji: string; top: string; left: string; size: string; bg: string; delay: string }[] = [
+  { emoji: '🍩', top: '0%', left: '2%', size: 'text-2xl', bg: 'bg-[#FFD9C7]', delay: '0s' },
+  { emoji: '🍭', top: '8%', left: '84%', size: 'text-xl', bg: 'bg-[#E6DBFF]', delay: '0.5s' },
+  { emoji: '🍕', top: '34%', left: '90%', size: 'text-2xl', bg: 'bg-[#FFD1A8]', delay: '1.1s' },
+  { emoji: '🍔', top: '70%', left: '0%', size: 'text-xl', bg: 'bg-[#F7D9A8]', delay: '1.3s' },
+  { emoji: '🧁', top: '46%', left: '-2%', size: 'text-2xl', bg: 'bg-[#C8F4E0]', delay: '1s' },
+  { emoji: '🍪', top: '50%', left: '86%', size: 'text-xl', bg: 'bg-[#CFE8FF]', delay: '1.5s' },
+];
+
 export function WaveVisualization({
   currentEnergyKcal,
   fillPercent,
@@ -105,8 +114,21 @@ export function WaveVisualization({
   } as CSSProperties;
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <svg width="0" height="0" className="absolute" aria-hidden="true">
+    <div id="hero" className="flex scroll-mt-20 flex-col items-center gap-4">
+      <div className="relative flex w-full flex-col items-center gap-4">
+        {/* 캐릭터 주위를 떠다니는 간식 스티커 — 장식용, 데이터 없음 */}
+        {STICKERS.map((s, i) => (
+          <span
+            key={i}
+            aria-hidden="true"
+            className={`float-sticker absolute flex h-9 w-9 items-center justify-center rounded-full shadow-sm sm:h-11 sm:w-11 ${s.size} ${s.bg}`}
+            style={{ top: s.top, left: s.left, animationDelay: s.delay }}
+          >
+            {s.emoji}
+          </span>
+        ))}
+
+        <svg width="0" height="0" className="absolute" aria-hidden="true">
         <defs>
           {/* 실루엣 원본 배경이 흰색이든 체크무늬(투명 미리보기)든 밝기만으로
               보이는 부분을 가르도록 흑백 변환 + 임계값 처리 — 배경이 얼룩덜룩해도
@@ -210,6 +232,7 @@ export function WaveVisualization({
             />
           </div>
         </div>
+      </div>
       </div>
 
       <div className="text-center">
