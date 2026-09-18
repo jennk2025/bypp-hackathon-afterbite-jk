@@ -79,12 +79,22 @@ const STICKERS: { emoji: string; top: string; left: string; size: string; bg: st
   { emoji: '🍔', top: '70%', left: '0%', size: 'text-xl', bg: 'bg-[#F7D9A8]', delay: '1.3s' },
   { emoji: '🧁', top: '46%', left: '-2%', size: 'text-2xl', bg: 'bg-[#C8F4E0]', delay: '1s' },
   { emoji: '🍪', top: '50%', left: '86%', size: 'text-xl', bg: 'bg-[#CFE8FF]', delay: '1.5s' },
+  { emoji: '🍿', top: '86%', left: '10%', size: 'text-lg', bg: 'bg-[#FFEFB0]', delay: '0.3s' },
+  { emoji: '🍰', top: '90%', left: '78%', size: 'text-xl', bg: 'bg-[#FFE3D3]', delay: '0.9s' },
+];
+
+const SPARKLES: { top: string; left: string; size: number; color: string; delay: string }[] = [
+  { top: '-2%', left: '38%', size: 16, color: '#C9B6FF', delay: '0.6s' },
+  { top: '78%', left: '18%', size: 13, color: '#34D399', delay: '1.2s' },
+  { top: '18%', left: '62%', size: 12, color: '#FF9A76', delay: '1.6s' },
 ];
 
 // 캐릭터 몸통은 svg 좌표계 y=50~190(높이 140) 사각형입니다. percent가 클수록(=아직
 // 못 움직인 만큼이 많을수록) 물이 위로 차오르도록 waveY를 아래→위로 옮깁니다.
+// 0%여도 완전히 납작하게 붙어있지 않도록 최소 4%만큼은 항상 살짝 찰랑이게 둡니다.
 function waveYFor(percent: number) {
-  return 190 - 1.4 * Math.max(0, Math.min(100, percent));
+  const visual = Math.max(4, Math.min(100, percent));
+  return 190 - 1.4 * visual;
 }
 
 export function WaveVisualization({
@@ -115,6 +125,20 @@ export function WaveVisualization({
           >
             {s.emoji}
           </span>
+        ))}
+        {SPARKLES.map((s, i) => (
+          <svg
+            key={i}
+            aria-hidden="true"
+            className="sparkle-icon absolute"
+            width={s.size}
+            height={s.size}
+            viewBox="0 0 20 20"
+            fill={s.color}
+            style={{ top: s.top, left: s.left, animationDelay: s.delay }}
+          >
+            <path d="M10 0 12.2 7.8 20 10 12.2 12.2 10 20 7.8 12.2 0 10 7.8 7.8Z" />
+          </svg>
         ))}
 
         <div
@@ -202,22 +226,13 @@ export function WaveVisualization({
               transform="rotate(-18 178 118)"
             />
 
-            {/* 얼굴 — 가벼운 상태일 땐 활짝 웃는 곡선 눈, 그 외엔 동그란 눈 + 반짝임 */}
-            {theme.stage === 'light' ? (
-              <>
-                <path d="M69,104 Q78,93 87,104" fill="none" stroke="#4A3728" strokeWidth="3.4" strokeLinecap="round" />
-                <path d="M113,104 Q122,93 131,104" fill="none" stroke="#4A3728" strokeWidth="3.4" strokeLinecap="round" />
-              </>
-            ) : (
-              <>
-                <circle cx="78" cy="108" r="11" fill="#4A3728" />
-                <circle cx="81.5" cy="104.5" r="3.4" fill="#ffffff" />
-                <circle cx="76" cy="112" r="1.4" fill="#ffffff" opacity="0.8" />
-                <circle cx="122" cy="108" r="11" fill="#4A3728" />
-                <circle cx="125.5" cy="104.5" r="3.4" fill="#ffffff" />
-                <circle cx="120" cy="112" r="1.4" fill="#ffffff" opacity="0.8" />
-              </>
-            )}
+            {/* 얼굴 — 동그랗고 땡글한 눈 + 반짝임은 모든 상태에서 동일하게 유지합니다 */}
+            <circle cx="78" cy="108" r="11" fill="#4A3728" />
+            <circle cx="81.5" cy="104.5" r="3.4" fill="#ffffff" />
+            <circle cx="76" cy="112" r="1.4" fill="#ffffff" opacity="0.8" />
+            <circle cx="122" cy="108" r="11" fill="#4A3728" />
+            <circle cx="125.5" cy="104.5" r="3.4" fill="#ffffff" />
+            <circle cx="120" cy="112" r="1.4" fill="#ffffff" opacity="0.8" />
             <ellipse cx="65" cy="127" rx="11" ry="7" fill="#FF9A8B" opacity="0.6" />
             <ellipse cx="135" cy="127" rx="11" ry="7" fill="#FF9A8B" opacity="0.6" />
             <path
@@ -237,13 +252,24 @@ export function WaveVisualization({
               </g>
             )}
 
-            {/* 많이 쌓였을 때만 보이는 땀방울 */}
-            {theme.stage === 'heavy' && (
+            {/* 슬슬 쌓이는 중일 때만 보이는 번개(활기) 디테일 */}
+            {theme.stage === 'rising' && (
               <path
-                d="M150,64 C146,72 146,80 150,82 C154,80 154,72 150,64 Z"
-                fill="#7DD3FC"
+                d="M154,58 L144,74 L151,74 L147,90 L162,70 L154,70 Z"
+                fill="#FBBF24"
+                stroke="#F59E0B"
+                strokeWidth="1"
+                strokeLinejoin="round"
                 aria-hidden="true"
               />
+            )}
+
+            {/* 많이 쌓였을 때만 보이는 땀방울 2개 */}
+            {theme.stage === 'heavy' && (
+              <>
+                <path d="M150,60 C145,69 145,78 150,80 C155,78 155,69 150,60 Z" fill="#7DD3FC" aria-hidden="true" />
+                <path d="M45,72 C42,78 42,84 45,86 C48,84 48,78 45,72 Z" fill="#7DD3FC" opacity="0.85" aria-hidden="true" />
+              </>
             )}
           </svg>
         </div>
