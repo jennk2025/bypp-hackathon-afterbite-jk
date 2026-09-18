@@ -26,7 +26,9 @@ export function AppHeader({ onLogoClick }: AppHeaderProps) {
           </span>
         </button>
 
-        <p className="font-brand hidden flex-1 text-center text-sm text-teal sm:block lg:text-base">
+        {/* 헤더 전체 폭 기준 정중앙에 절대 위치시켜서, 로고/도움말 버튼 폭에 상관없이
+            진짜 가운데(정중앙)에 오도록 합니다. */}
+        <p className="font-brand absolute left-1/2 hidden -translate-x-1/2 text-base text-teal sm:block lg:text-lg">
           오늘 먹은 간식, 오늘의 운동으로 가볍게
         </p>
 
@@ -34,7 +36,7 @@ export function AppHeader({ onLogoClick }: AppHeaderProps) {
           type="button"
           onClick={() => setShowHelp(true)}
           aria-label="이 화면 설명 보기"
-          className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-navy/15 text-[11px] font-bold text-navy-soft transition-colors hover:bg-navy/5 sm:ml-0 lg:h-8 lg:w-8 lg:text-sm"
+          className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-navy/15 text-[11px] font-bold text-navy-soft transition-colors hover:bg-navy/5 lg:h-8 lg:w-8 lg:text-sm"
         >
           ?
         </button>
