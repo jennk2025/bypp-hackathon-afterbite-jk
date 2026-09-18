@@ -29,9 +29,16 @@ function parseOcrText(rawText: string): OcrResult {
   const servingMatch = rawText.match(/(?:1회\s*제공량|총\s*내용량|내용량)[^\d]{0,6}(\d+\s*[gGmM]?[lL]?)/);
   const servingSizeGuess = matchedDbEntry?.servingSizeLabel ?? (servingMatch ? servingMatch[1].trim() : '');
 
+  // 영양정보 표 사진이든 포장지 앞면 사진이든 상관없이, 숫자·기호 위주 줄과 너무 긴 설명/문구 줄은
+  // 제외하고 남은 짧은 한글 줄을 제품명 후보로 봅니다 (포장지 앞면은 보통 제품명이 가장 짧고 굵게 보임).
   const nameGuess =
     matchedDbEntry?.name ??
-    lines.find((line) => /[가-힣]{2,}/.test(line) && !EXCLUDE_KEYWORDS.some((kw) => line.includes(kw))) ??
+    lines.find(
+      (line) =>
+        /[가-힣]{2,}/.test(line) &&
+        line.length <= 20 &&
+        !EXCLUDE_KEYWORDS.some((kw) => line.includes(kw))
+    ) ??
     '';
 
   return {

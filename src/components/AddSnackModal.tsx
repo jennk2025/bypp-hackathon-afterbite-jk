@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { SNACK_DB } from '../data/snackDatabase';
 import { analyzeSnackPhoto } from '../lib/snackVision';
 import { buildPortionPresets } from '../lib/portion';
+import { CameraCapture } from './CameraCapture';
 import type { Snack, SnackSource } from '../types';
 
 export interface SnackFormInput {
@@ -20,7 +21,7 @@ interface AddSnackModalProps {
   onSave: (input: SnackFormInput) => void;
 }
 
-type Step = 'choose' | 'photo' | 'form';
+type Step = 'choose' | 'camera' | 'photo' | 'form';
 
 export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackModalProps) {
   const [step, setStep] = useState<Step>(mode === 'edit' ? 'form' : 'choose');
@@ -122,16 +123,31 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
             <div className="flex flex-col gap-3">
               <button
                 type="button"
+                onClick={() => setStep('camera')}
+                className="flex items-center gap-3 rounded-2xl border border-navy/10 bg-ivory-card px-4 py-4 text-left shadow-sm transition-transform active:scale-[0.98]"
+              >
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-aqua to-teal text-lg shadow-sm">
+                  📸
+                </span>
+                <span>
+                  <span className="block text-sm font-semibold text-charcoal">카메라로 촬영하기</span>
+                  <span className="block text-xs text-navy-soft">
+                    지금 바로 포장지·영양정보를 찍어서 인식해요
+                  </span>
+                </span>
+              </button>
+              <button
+                type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="flex items-center gap-3 rounded-2xl border border-navy/10 bg-ivory-card px-4 py-4 text-left shadow-sm transition-transform active:scale-[0.98]"
               >
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lavender to-aqua text-lg shadow-sm">
-                  📷
+                  🖼️
                 </span>
                 <span>
-                  <span className="block text-sm font-semibold text-charcoal">사진으로 인식하기</span>
+                  <span className="block text-sm font-semibold text-charcoal">사진 업로드하기</span>
                   <span className="block text-xs text-navy-soft">
-                    포장지·영양정보 사진을 올리면 자동으로 채워줘요
+                    이미 찍어둔 포장지·영양정보 사진을 올려요
                   </span>
                 </span>
               </button>
@@ -139,7 +155,6 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                capture="environment"
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
@@ -166,6 +181,10 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                 </span>
               </button>
             </div>
+          )}
+
+          {step === 'camera' && (
+            <CameraCapture onCapture={handleFileSelected} onCancel={() => setStep('choose')} />
           )}
 
           {step === 'photo' && (

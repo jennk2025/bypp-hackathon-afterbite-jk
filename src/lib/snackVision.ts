@@ -9,6 +9,31 @@ export interface VisionResult {
   note: string;
 }
 
+// 사진 한 장이 포장지 앞면(제품명 위주)인지 영양정보 표인지 미리 구분하지 않고,
+// Gemini·OCR 둘 다 "찾은 만큼만" 채우게 한 뒤, 어떤 항목을 못 찾았는지 안내 문구로 알려줍니다.
+function buildNote(params: {
+  method: 'gemini' | 'ocr';
+  hasName: boolean;
+  hasCalories: boolean;
+  matchedDb?: boolean;
+}): string {
+  const { method, hasName, hasCalories, matchedDb } = params;
+  if (matchedDb) {
+    return '사진 속 글자로 내장 DB에서 제품을 찾았어요. 실제 포장지와 비교해 확인해주세요.';
+  }
+  const methodLabel = method === 'gemini' ? 'AI가' : '사진에서 글자를 읽어';
+  if (hasName && hasCalories) {
+    return `${methodLabel} 제품명과 칼로리를 모두 인식했어요. 실제 포장지와 비교해 꼭 확인해주세요.`;
+  }
+  if (hasName && !hasCalories) {
+    return '제품명은 인식했지만 칼로리 정보는 찾지 못했어요. 영양정보 표를 다시 찍거나 아래에서 직접 입력해주세요.';
+  }
+  if (!hasName && hasCalories) {
+    return '칼로리 정보는 인식했지만 제품명은 찾지 못했어요. 아래에 제품명을 직접 입력해주세요.';
+  }
+  return '사진에서 정보를 읽지 못했어요. 아래에 직접 입력해주세요.';
+}
+
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -38,8 +63,9 @@ async function tryGemini(file: File): Promise<VisionResult | null> {
     if (!response.ok) return null;
 
     const data = await response.json();
-    const hasResult = Boolean(data?.name) || data?.caloriesPerServing != null;
-    if (!hasResult) return null;
+    const hasName = Boolean(data?.name);
+    const hasCalories = data?.caloriesPerServing != null;
+    if (!hasName && !hasCalories) return null;
 
     return {
       success: true,
@@ -47,7 +73,7 @@ async function tryGemini(file: File): Promise<VisionResult | null> {
       caloriesGuess: typeof data.caloriesPerServing === 'number' ? data.caloriesPerServing : null,
       servingSizeGuess: data.servingSizeLabel ?? '',
       method: 'gemini',
-      note: 'AI가 사진을 보고 인식한 결과예요. 실제 포장지와 비교해 꼭 확인해주세요.',
+      note: buildNote({ method: 'gemini', hasName, hasCalories }),
     };
   } catch {
     return null;
@@ -71,9 +97,12 @@ export async function analyzeSnackPhoto(file: File): Promise<VisionResult> {
       caloriesGuess: ocrResult.caloriesGuess,
       servingSizeGuess: ocrResult.servingSizeGuess,
       method: 'ocr',
-      note: ocrResult.matchedDbEntry
-        ? '사진 속 글자로 내장 DB에서 제품을 찾았어요. 실제 포장지와 비교해 확인해주세요.'
-        : '사진에서 글자를 읽어 자동으로 채웠어요. 정확하지 않을 수 있으니 확인해주세요.',
+      note: buildNote({
+        method: 'ocr',
+        hasName: Boolean(ocrResult.nameGuess),
+        hasCalories: ocrResult.caloriesGuess != null,
+        matchedDb: Boolean(ocrResult.matchedDbEntry),
+      }),
     };
   }
 
@@ -83,6 +112,6 @@ export async function analyzeSnackPhoto(file: File): Promise<VisionResult> {
     caloriesGuess: null,
     servingSizeGuess: '',
     method: 'none',
-    note: '사진에서 정보를 읽지 못했어요. 아래에 직접 입력해주세요.',
+    note: buildNote({ method: 'ocr', hasName: false, hasCalories: false }),
   };
 }
