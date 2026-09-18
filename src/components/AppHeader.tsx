@@ -27,11 +27,8 @@ export function AppHeader({ onLogoClick }: AppHeaderProps) {
         </button>
 
         {/* 홍보 문구 — 클릭 안 되는 순수 장식용 카피 */}
-        <p className="hidden flex-1 items-center justify-center gap-1.5 text-center text-[11px] font-semibold tracking-wide text-navy-soft sm:flex lg:text-xs">
-          <span aria-hidden="true">🍪</span>
-          오늘 먹은 간식,
-          <span aria-hidden="true">🏃</span>
-          오늘의 운동으로 가볍게
+        <p className="hidden flex-1 text-center text-[11px] font-semibold tracking-wide text-navy-soft sm:block lg:text-xs">
+          오늘 먹은 간식, 오늘의 운동으로 가볍게
         </p>
 
         <button
