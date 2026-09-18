@@ -1,10 +1,10 @@
 export function AppHeader() {
   return (
-    <div className="fixed inset-x-0 top-0 z-30 border-b border-white/10 bg-header/90 shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur-md">
+    <div className="fixed inset-x-0 top-0 z-30 border-b border-white/15 bg-header/92 shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur-md">
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-full opacity-70"
+        className="pointer-events-none absolute inset-x-0 top-0 h-full opacity-80"
         style={{
-          backgroundImage: 'linear-gradient(180deg, rgba(56, 189, 248, 0.12), transparent)',
+          backgroundImage: 'linear-gradient(180deg, rgba(148, 163, 253, 0.16), transparent)',
         }}
         aria-hidden="true"
       />

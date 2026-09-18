@@ -34,7 +34,7 @@ export function WorkoutTimer({
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-10 pt-8">
       <p className="text-center text-xs font-medium text-navy-soft">{routine.name}</p>
-      <p className="mt-1 text-center text-[11px] text-navy-soft/70">
+      <p className="mt-1 text-center text-[11px] text-navy-soft">
         목표 약 {routine.durationMinutes}분 · 예상 {routine.estBurnLowKcal}~{routine.estBurnHighKcal} kcal
       </p>
 
@@ -95,7 +95,7 @@ export function WorkoutTimer({
         <button
           type="button"
           onClick={onCancel}
-          className="w-full rounded-2xl py-2.5 text-sm font-medium text-navy-soft/70"
+          className="w-full rounded-2xl py-2.5 text-sm font-medium text-navy-soft"
         >
           취소하고 나가기
         </button>

@@ -181,7 +181,7 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-teal border-t-transparent" />
                 사진 속 글자를 읽는 중...
               </div>
-              <p className="text-center text-[11px] text-navy-soft/70">
+              <p className="text-center text-[11px] text-navy-soft">
                 분석이 끝나면 사진은 바로 삭제되고, 결과만 남아요.
               </p>
             </div>
@@ -259,13 +259,13 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                 </div>
               </div>
 
-              <p className="text-[11px] text-navy-soft/70">
+              <p className="text-[11px] text-navy-soft">
                 인식·검색된 정보는 틀릴 수 있어요. 실제 포장지 정보와 다르면 위 값을 직접 고쳐주세요.
               </p>
 
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-navy-soft">
-                  먹은 양 <span className="font-normal text-navy-soft/60">· 1회 제공량 기준</span>
+                  먹은 양 <span className="font-normal text-navy-soft">· 1회 제공량 기준</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {portionPresets.map((preset) => (

@@ -3,10 +3,10 @@
 @theme {
   --color-ivory: #080c16;
   --color-ivory-card: #101828;
-  --color-header: #1d2c4d;
+  --color-header: #30447a;
   --color-charcoal: #eef1f7;
   --color-navy: #eef1f7;
-  --color-navy-soft: #8d96ab;
+  --color-navy-soft: #b3bcd4;
   --color-teal: #2dd4bf;
   --color-aqua: #38bdf8;
   --color-lavender: #a3e635;
@@ -26,9 +26,9 @@ body,
 body {
   background-color: var(--color-ivory);
   background-image:
-    radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-    radial-gradient(circle at 50% 30%, rgba(45, 212, 191, 0.2), transparent 58%),
-    linear-gradient(165deg, #182746 0%, #101c34 36%, #0a1122 68%, #060911 100%);
+    radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+    radial-gradient(circle at 50% 26%, rgba(148, 163, 253, 0.18), transparent 60%),
+    linear-gradient(160deg, #202f57 0%, #16213f 30%, #0f172e 60%, #080b17 100%);
   background-size:
     22px 22px,
     100% 100%,
@@ -120,13 +120,28 @@ body {
 
 .wave-glow {
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.06),
-    0 25px 70px -18px rgba(45, 212, 191, 0.55);
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 25px 70px -16px var(--glow-color, rgba(45, 212, 191, 0.55));
+  transition:
+    box-shadow 700ms ease,
+    filter 700ms ease;
 }
 
-/* 캐릭터 주변에 은은하게 번지는 이중 링 — 사진이 배경에서 도드라지도록 함 */
+/* 캐릭터 주변에 은은하게 번지는 블롭 글로우 + 이중 링 — 사진이 배경에서 확실히 도드라지도록 함.
+   색상/속도는 에너지 상태(calm/building/heavy)에 따라 JS에서 CSS 변수로 전달됩니다. */
 .wave-halo {
   position: relative;
+}
+
+.wave-backdrop-glow {
+  position: absolute;
+  inset: -20%;
+  z-index: -1;
+  border-radius: 9999px;
+  background: radial-gradient(circle, var(--halo-color, rgba(45, 212, 191, 0.4)), transparent 68%);
+  filter: blur(32px);
+  pointer-events: none;
+  transition: background 700ms ease;
 }
 
 .wave-halo::before,
@@ -136,23 +151,24 @@ body {
   top: 50%;
   left: 50%;
   border-radius: 9999px;
-  border: 1px solid rgba(45, 212, 191, 0.22);
+  border: 1.5px solid var(--halo-color, rgba(45, 212, 191, 0.3));
   pointer-events: none;
+  transition: border-color 700ms ease;
 }
 
 .wave-halo::before {
-  width: 112%;
-  height: 112%;
+  width: 114%;
+  height: 114%;
   transform: translate(-50%, -50%) scale(1);
-  animation: halo-pulse 4.5s ease-in-out infinite;
+  animation: halo-pulse var(--halo-speed, 4.5s) ease-in-out infinite;
 }
 
 .wave-halo::after {
-  width: 132%;
-  height: 132%;
-  border-color: rgba(56, 189, 248, 0.14);
+  width: 134%;
+  height: 134%;
+  opacity: 0.65;
   transform: translate(-50%, -50%) scale(1);
-  animation: halo-pulse 4.5s ease-in-out infinite 0.7s;
+  animation: halo-pulse var(--halo-speed, 4.5s) ease-in-out infinite 0.7s;
 }
 
 @keyframes halo-pulse {
@@ -162,8 +178,8 @@ body {
     transform: translate(-50%, -50%) scale(1);
   }
   50% {
-    opacity: 0.9;
-    transform: translate(-50%, -50%) scale(1.035);
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(1.045);
   }
 }
 
