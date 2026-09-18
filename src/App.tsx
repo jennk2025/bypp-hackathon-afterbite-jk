@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AppHeader } from './components/AppHeader';
+import { BackgroundSparkles } from './components/BackgroundSparkles';
 import { WaveVisualization } from './components/WaveVisualization';
 import { BalanceScale } from './components/BalanceScale';
 import { SnackCard } from './components/SnackCard';
@@ -66,6 +67,7 @@ export default function App() {
       <>
         <div className="bg-decor" aria-hidden="true" />
         <div className="bg-decor-spot" aria-hidden="true" />
+        <BackgroundSparkles />
         <AppHeader onLogoClick={goHome} />
         <div className="pt-14">
           <MoveConditionForm
@@ -84,6 +86,7 @@ export default function App() {
       <>
         <div className="bg-decor" aria-hidden="true" />
         <div className="bg-decor-spot" aria-hidden="true" />
+        <BackgroundSparkles />
         <AppHeader onLogoClick={goHome} />
         <div className="pt-14">
           <RoutineSuggestions
@@ -106,6 +109,7 @@ export default function App() {
       <>
         <div className="bg-decor" aria-hidden="true" />
         <div className="bg-decor-spot" aria-hidden="true" />
+        <BackgroundSparkles />
         <AppHeader onLogoClick={goHome} />
         <div className="pt-14">
           <WorkoutTimer
@@ -126,6 +130,7 @@ export default function App() {
     <div className="mx-auto min-h-screen w-full max-w-md px-5 pb-32 pt-24 sm:max-w-xl lg:max-w-2xl">
       <div className="bg-decor" aria-hidden="true" />
       <div className="bg-decor-spot" aria-hidden="true" />
+      <BackgroundSparkles />
       <AppHeader onLogoClick={goHome} />
       <header className="mb-2 text-center">
         <p className="text-[11px] font-bold uppercase tracking-[2px] text-navy-soft">오늘의 밸런스</p>

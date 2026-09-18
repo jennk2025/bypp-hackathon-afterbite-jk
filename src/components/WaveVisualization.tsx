@@ -81,6 +81,7 @@ const STICKERS: { emoji: string; top: string; left: string; size: string; bg: st
   { emoji: '🍪', top: '50%', left: '86%', size: 'text-xl', bg: 'bg-[#CFE8FF]', delay: '1.5s' },
   { emoji: '🍿', top: '86%', left: '10%', size: 'text-lg', bg: 'bg-[#FFEFB0]', delay: '0.3s' },
   { emoji: '🍰', top: '90%', left: '78%', size: 'text-xl', bg: 'bg-[#FFE3D3]', delay: '0.9s' },
+  { emoji: '🍗', top: '62%', left: '96%', size: 'text-xl', bg: 'bg-[#FFDDB8]', delay: '0.7s' },
 ];
 
 const SPARKLES: { top: string; left: string; size: number; color: string; delay: string }[] = [
@@ -283,7 +284,7 @@ export function WaveVisualization({
           <span aria-hidden="true">{theme.emoji}</span>
           {theme.label}
         </span>
-        <p className="mt-1 text-xs font-medium tracking-wide text-navy-soft">현재 참고 에너지</p>
+        <p className="mt-1 text-xs font-medium tracking-wide text-navy-soft">오늘 누적 칼로리</p>
         <p className="font-display text-3xl text-charcoal sm:text-4xl">
           {Math.round(currentEnergyKcal)}
           <span className="ml-0.5 text-base font-semibold text-navy-soft">kcal</span>
@@ -305,11 +306,6 @@ export function WaveVisualization({
           <p className="text-xs text-navy-soft">완료한 움직임</p>
         </button>
       </div>
-
-      <p className="max-w-xs text-center text-[11px] leading-relaxed text-navy-soft">
-        물결은 음식이나 체지방이 사라진다는 의미가 아니라, 기록된 간식 에너지와 완료한 움직임을
-        비교해 보여주는 참고용 표시예요. 많이 채워질수록 아직 못 움직인 만큼이 쌓였다는 뜻이에요.
-      </p>
     </div>
   );
 }

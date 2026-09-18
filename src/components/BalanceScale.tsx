@@ -1,4 +1,4 @@
-import { stageOf, STAGE_COPY, type Stage } from '../lib/energyStage';
+import { stageOf, STAGE_COPY, STAGE_KCAL_RANGE, REFERENCE_MAX_KCAL, type Stage } from '../lib/energyStage';
 
 interface BalanceScaleProps {
   percent: number;
@@ -19,7 +19,7 @@ export function BalanceScale({ percent }: BalanceScaleProps) {
   return (
     <section className="mt-6 rounded-[22px] border border-navy/10 bg-ivory-card px-5 py-4 shadow-sm">
       <p className="mb-2.5 text-center text-[11px] font-bold tracking-wide" style={{ color: ZONE_COLOR[stage] }}>
-        <span aria-hidden="true">{copy.emoji}</span> {copy.range} 구간 · {copy.label}
+        <span aria-hidden="true">{copy.emoji}</span> {copy.label} ({STAGE_KCAL_RANGE[stage]})
       </p>
       <div className="balance-track">
         <div className="balance-marker" style={{ left: `calc(${clamped}% - 7px)` }} aria-hidden="true">
@@ -41,25 +41,25 @@ export function BalanceScale({ percent }: BalanceScaleProps) {
             style={{ flexGrow: 31, background: 'linear-gradient(90deg,#FB7185,#F87171)', opacity: stage === 'heavy' ? 1 : 0.5 }}
           />
         </div>
-        {/* 구간 기준을 막대 아래에 작게 표시 — 색 폭과 같은 비율로 정렬됩니다 */}
+        {/* 구간 기준을 막대 아래에 kcal로 작게 표시 — 색 폭과 같은 비율로 정렬됩니다 */}
         <div className="mt-1.5 flex text-[9.5px] font-semibold text-navy-soft/80">
           <span className="text-left" style={{ flexGrow: 34 }}>
-            {STAGE_COPY.light.range}
+            {STAGE_KCAL_RANGE.light}
           </span>
           <span className="text-center" style={{ flexGrow: 35 }}>
-            {STAGE_COPY.rising.range}
+            {STAGE_KCAL_RANGE.rising}
           </span>
           <span className="text-right" style={{ flexGrow: 31 }}>
-            {STAGE_COPY.heavy.range}
+            {STAGE_KCAL_RANGE.heavy}
           </span>
         </div>
       </div>
       <div className="mt-2.5 flex items-center justify-between text-[11.5px] font-bold">
         <span className="flex items-center gap-1 text-[#16A34A]">
-          <span aria-hidden="true">🌱</span> 0% · 완전 건강!
+          <span aria-hidden="true">🌱</span> 0kcal · 완전 건강!
         </span>
         <span className="flex items-center gap-1 text-[#E11D48]">
-          100% · 아직 많이 남았어요 <span aria-hidden="true">🥵</span>
+          {REFERENCE_MAX_KCAL}kcal+ · 아직 많이 남았어요 <span aria-hidden="true">🥵</span>
         </span>
       </div>
     </section>

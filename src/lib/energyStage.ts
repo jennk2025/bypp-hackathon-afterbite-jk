@@ -3,6 +3,10 @@
 // 한 곳에서만 정의합니다.
 export type Stage = 'light' | 'rising' | 'heavy';
 
+// 이 kcal에 도달하면 100%(빨간 구간)입니다. useEnergyGauge의 fillPercent 계산과
+// BalanceScale의 kcal 안내 문구가 이 값을 공유해서 서로 어긋나지 않게 합니다.
+export const REFERENCE_MAX_KCAL = 2500;
+
 export const STAGE_RISING_AT = 35;
 export const STAGE_HEAVY_AT = 70;
 
@@ -12,12 +16,19 @@ export function stageOf(percent: number): Stage {
   return 'heavy';
 }
 
-export const STAGE_COPY: Record<Stage, { label: string; emoji: string; range: string }> = {
-  light: { label: '가벼운 상태예요, 건강 그 자체예요', emoji: '🌱', range: `0~${STAGE_RISING_AT - 1}%` },
-  rising: {
-    label: '슬슬 쌓이고 있어요',
-    emoji: '⚡',
-    range: `${STAGE_RISING_AT}~${STAGE_HEAVY_AT - 1}%`,
-  },
-  heavy: { label: '많이 쌓였어요, 같이 움직여요', emoji: '🔥', range: `${STAGE_HEAVY_AT}~100%` },
+export const STAGE_COPY: Record<Stage, { label: string; emoji: string }> = {
+  light: { label: '가벼운 상태예요, 건강 그 자체예요', emoji: '🌱' },
+  rising: { label: '슬슬 쌓이고 있어요', emoji: '⚡' },
+  heavy: { label: '많이 쌓였어요, 같이 움직여요', emoji: '🔥' },
+};
+
+function kcalAt(percent: number): number {
+  return Math.round((percent / 100) * REFERENCE_MAX_KCAL);
+}
+
+// 퍼센트 구간을 실제 kcal 범위 문구로 바꿔줍니다. (예: "0~874kcal")
+export const STAGE_KCAL_RANGE: Record<Stage, string> = {
+  light: `0~${kcalAt(STAGE_RISING_AT) - 1}kcal`,
+  rising: `${kcalAt(STAGE_RISING_AT)}~${kcalAt(STAGE_HEAVY_AT) - 1}kcal`,
+  heavy: `${kcalAt(STAGE_HEAVY_AT)}kcal+`,
 };
