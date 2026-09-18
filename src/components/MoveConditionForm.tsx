@@ -214,6 +214,8 @@ export function MoveConditionForm({ totalCalories, snackCount, onBack, onSubmit 
           onClick={() =>
             onSubmit({
               minutes: effectiveMinutes,
+              // "20분+" 프리셋을 고른 경우에만 "20분 이상"이라는 뜻으로 전달합니다.
+              minutesIsMinimum: !useCustomMinutes && minutes === 20,
               place,
               intensity,
               noiseOk,

@@ -19,6 +19,7 @@ const INTENSITY_LABEL: Record<string, string> = {
 
 function buildPrompt(body: {
   minutes: number;
+  minutesIsMinimum: boolean;
   place: string;
   intensity: string;
   noiseOk: boolean;
@@ -28,12 +29,15 @@ function buildPrompt(body: {
 }): string {
   const placeLabel = PLACE_LABEL[body.place] ?? body.place;
   const intensityLabel = INTENSITY_LABEL[body.intensity] ?? body.intensity;
+  const timeLabel = body.minutesIsMinimum
+    ? `최소 ${body.minutes}분 이상 (더 길어도 좋음, 예: ${body.minutes}~${body.minutes + 15}분)`
+    : `정확히 ${body.minutes}분 내외(±2분 이내)`;
 
   return `당신은 친근한 홈트레이닝 코치입니다. 사용자가 간식을 먹은 만큼 가볍게 움직이려고 합니다.
 아래 조건에 맞는, 서로 다른 움직임 루틴 3개를 한국어로 추천하세요.
 
 조건:
-- 움직일 수 있는 시간: 약 ${body.minutes}분
+- 움직일 수 있는 시간: ${timeLabel}
 - 장소: ${placeLabel}
 - 원하는 강도: ${intensityLabel}
 - 소리를 내도 되는지: ${body.noiseOk ? '괜찮음' : '조용해야 함(이웃 등 고려, 점프·쿵쿵거리는 동작 피하기)'}
@@ -42,6 +46,8 @@ function buildPrompt(body: {
 ${body.extraRequest ? `- 사용자의 추가 요청사항(참고해서 반영하되, 위 조건과 충돌하면 위 조건을 우선하세요): ${body.extraRequest}` : ''}
 
 정확히 3개의 루틴을 만들어주세요. 소음과 점프 조건을 반드시 지켜주세요.
+각 루틴의 durationMinutes는 반드시 위에서 요청한 시간 범위를 지켜주세요 — 짧게 줄이지 마세요.
+동작(steps) 개수와 각 동작 설명 길이도 durationMinutes에 맞게 충분히 구성하세요.
 estBurnLowKcal은 estBurnHighKcal보다 작거나 같아야 합니다.`;
 }
 
@@ -78,9 +84,11 @@ export async function runRecommendRoutine(rawBody: unknown): Promise<ApiResult> 
   }
 
   const extraRequest = typeof body?.extraRequest === 'string' ? body.extraRequest.trim().slice(0, 200) : '';
+  const minutesIsMinimum = Boolean(body?.minutesIsMinimum);
 
   const promptText = buildPrompt({
     minutes,
+    minutesIsMinimum,
     place,
     intensity,
     noiseOk: Boolean(body?.noiseOk),
@@ -88,6 +96,12 @@ export async function runRecommendRoutine(rawBody: unknown): Promise<ApiResult> 
     totalCalories: Number(body?.totalCalories) || 0,
     extraRequest: extraRequest || undefined,
   });
+
+  // 프롬프트 문구만으로는 모델이 조용히 무시할 수 있어, 구조화 출력 스키마에도
+  // durationMinutes 범위를 직접 강제합니다("20분+" 선택 시 15분짜리가 오는 문제 방지).
+  const durationRange = minutesIsMinimum
+    ? { minimum: minutes, maximum: minutes + 15 }
+    : { minimum: Math.max(1, minutes - 2), maximum: minutes + 2 };
 
   const requestPayload = {
     contents: [{ parts: [{ text: promptText }] }],
@@ -99,7 +113,7 @@ export async function runRecommendRoutine(rawBody: unknown): Promise<ApiResult> 
           type: "OBJECT",
           properties: {
             name: { type: "STRING", description: "루틴 이름(간결하게, 10자 내외)" },
-            durationMinutes: { type: "INTEGER" },
+            durationMinutes: { type: "INTEGER", minimum: durationRange.minimum, maximum: durationRange.maximum },
             estBurnLowKcal: { type: "INTEGER" },
             estBurnHighKcal: { type: "INTEGER" },
             steps: { 

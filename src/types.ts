@@ -44,6 +44,9 @@ export interface ExerciseRoutine {
 
 export interface MoveConditions {
   minutes: number;
+  // true면 "minutes 이상"(예: "20분+")이라는 뜻입니다. AI 루틴 추천에서 durationMinutes가
+  // minutes보다 짧게 나오지 않도록 강제하는 데 씁니다.
+  minutesIsMinimum?: boolean;
   place: Place;
   intensity: Intensity;
   noiseOk: boolean;
