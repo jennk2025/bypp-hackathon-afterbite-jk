@@ -31,8 +31,6 @@ const RUNNER_SHIFT_PERCENT: Record<RunnerCharacter, number> = {
 
 // 에너지가 많이 쌓일수록(=아직 못 움직인 만큼 많을수록) "안 좋은" 방향이라는 걸
 // 색과 속도로 드러내기 위한 3단계 테마입니다. calm(가벼움) → building(쌓이는 중) → heavy(많이 쌓임)
-type FillLevel = 'calm' | 'building' | 'heavy';
-
 interface FillTheme {
   label: string;
   emoji: string;
