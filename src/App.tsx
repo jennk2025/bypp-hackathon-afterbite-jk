@@ -10,6 +10,7 @@ import { MoveConditionForm } from './components/MoveConditionForm';
 import { RoutineSuggestions } from './components/RoutineSuggestions';
 import { WorkoutTimer } from './components/WorkoutTimer';
 import { CompletedWorkoutsModal } from './components/CompletedWorkoutsModal';
+import { ConfirmResetModal } from './components/ConfirmResetModal';
 import { loadState, saveState, clearState } from './lib/storage';
 import { useEnergyGauge } from './hooks/useEnergyGauge';
 import { useSnackTray } from './hooks/useSnackTray';
@@ -20,6 +21,7 @@ type ModalState =
   | { type: 'add' }
   | { type: 'edit'; snackId: string }
   | { type: 'completedWorkouts' }
+  | { type: 'confirmReset' }
   | null;
 
 function formatMmSs(totalSeconds: number): string {
@@ -75,7 +77,7 @@ export default function App() {
         <div className="bg-decor" aria-hidden="true" />
         <div className="bg-decor-spot" aria-hidden="true" />
         <BackgroundSparkles />
-        <AppHeader onLogoClick={goHome} onResetAll={resetAll} />
+        <AppHeader onLogoClick={goHome} />
         <div className="pt-14 lg:pt-16">
           <MoveConditionForm
             totalCalories={tray.selectedTotalCalories}
@@ -94,7 +96,7 @@ export default function App() {
         <div className="bg-decor" aria-hidden="true" />
         <div className="bg-decor-spot" aria-hidden="true" />
         <BackgroundSparkles />
-        <AppHeader onLogoClick={goHome} onResetAll={resetAll} />
+        <AppHeader onLogoClick={goHome} />
         <div className="pt-14 lg:pt-16">
           <RoutineSuggestions
             routines={workout.routines}
@@ -117,7 +119,7 @@ export default function App() {
         <div className="bg-decor" aria-hidden="true" />
         <div className="bg-decor-spot" aria-hidden="true" />
         <BackgroundSparkles />
-        <AppHeader onLogoClick={goHome} onResetAll={resetAll} />
+        <AppHeader onLogoClick={goHome} />
         <div className="pt-14 lg:pt-16">
           <WorkoutTimer
             routine={inProgress.routine}
@@ -138,7 +140,7 @@ export default function App() {
       <div className="bg-decor" aria-hidden="true" />
       <div className="bg-decor-spot" aria-hidden="true" />
       <BackgroundSparkles />
-      <AppHeader onLogoClick={goHome} onResetAll={resetAll} />
+      <AppHeader onLogoClick={goHome} />
 
       {/* 좁은 화면(폰)에서는 그냥 위→아래(타이틀→캐릭터→균형막대→트레이) 문서 순서 그대로
           쌓이고, 넓은 화면(lg+)에서만 home-grid가 4개 영역(title/gauge/char/tray)으로 재배치합니다.
@@ -249,6 +251,13 @@ export default function App() {
               )}
               <button
                 type="button"
+                onClick={() => setModal({ type: 'confirmReset' })}
+                className="rounded-full border border-navy/15 px-3 py-1.5 text-xs font-medium text-navy-soft/70 transition-colors hover:border-red-300 hover:text-red-400"
+              >
+                전체 초기화
+              </button>
+              <button
+                type="button"
                 onClick={() => setModal({ type: 'add' })}
                 className="btn-primary rounded-full px-3.5 py-1.5 text-xs font-semibold text-white"
               >
@@ -313,6 +322,9 @@ export default function App() {
           onDelete={workout.deleteCompletedWorkout}
           onClose={() => setModal(null)}
         />
+      )}
+      {modal?.type === 'confirmReset' && (
+        <ConfirmResetModal onConfirm={resetAll} onCancel={() => setModal(null)} />
       )}
     </div>
   );
