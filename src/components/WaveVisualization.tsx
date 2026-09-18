@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { stageOf, STAGE_COPY, type Stage } from '../lib/energyStage';
 
 interface WaveVisualizationProps {
   currentEnergyKcal: number;
@@ -7,8 +8,6 @@ interface WaveVisualizationProps {
   completedWorkoutCount: number;
   onCompletedWorkoutsClick: () => void;
 }
-
-type Stage = 'light' | 'rising' | 'heavy';
 
 interface FillTheme {
   stage: Stage;
@@ -23,23 +22,15 @@ interface FillTheme {
   mouthPath: string;
 }
 
-const STAGE_COPY: Record<Stage, { label: string; emoji: string; mouthPath: string }> = {
-  // 웃는 입 — 아직 덜 쌓여서 가벼운 상태
-  light: { label: '가벼운 상태예요, 건강 그 자체예요', emoji: '🌱', mouthPath: 'M86,126 Q100,141 114,126' },
-  // 살짝 무표정 — 슬슬 쌓이는 중
-  rising: { label: '슬슬 쌓이고 있어요', emoji: '⚡', mouthPath: 'M89,130 Q100,133 111,130' },
-  // 처진 입(걱정) — 많이 쌓임
-  heavy: { label: '많이 쌓였어요, 같이 움직여요', emoji: '🔥', mouthPath: 'M87,133 Q100,121 113,133' },
+// 웃는 입(가벼움) → 살짝 무표정(쌓이는 중) → 처진 입(많이 쌓임)
+const MOUTH_PATH: Record<Stage, string> = {
+  light: 'M84,123 Q100,148 116,123',
+  rising: 'M89,130 Q100,133 111,130',
+  heavy: 'M87,133 Q100,121 113,133',
 };
 
 function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
-}
-
-function stageOf(percent: number): Stage {
-  if (percent < 35) return 'light';
-  if (percent < 70) return 'rising';
-  return 'heavy';
 }
 
 function getDynamicTheme(percent: number): FillTheme {
@@ -71,7 +62,7 @@ function getDynamicTheme(percent: number): FillTheme {
     stage,
     label: copy.label,
     emoji: copy.emoji,
-    mouthPath: copy.mouthPath,
+    mouthPath: MOUTH_PATH[stage],
     from: baseColor,
     to: darkColor,
     ripple: lightColor,
@@ -211,13 +202,24 @@ export function WaveVisualization({
               transform="rotate(-18 178 118)"
             />
 
-            {/* 얼굴 */}
-            <circle cx="78" cy="108" r="11" fill="#4A3728" />
-            <circle cx="81.5" cy="104.5" r="3" fill="#ffffff" />
-            <circle cx="122" cy="108" r="11" fill="#4A3728" />
-            <circle cx="125.5" cy="104.5" r="3" fill="#ffffff" />
-            <ellipse cx="66" cy="126" rx="10" ry="6" fill="#FF9A8B" opacity="0.55" />
-            <ellipse cx="134" cy="126" rx="10" ry="6" fill="#FF9A8B" opacity="0.55" />
+            {/* 얼굴 — 가벼운 상태일 땐 활짝 웃는 곡선 눈, 그 외엔 동그란 눈 + 반짝임 */}
+            {theme.stage === 'light' ? (
+              <>
+                <path d="M69,104 Q78,93 87,104" fill="none" stroke="#4A3728" strokeWidth="3.4" strokeLinecap="round" />
+                <path d="M113,104 Q122,93 131,104" fill="none" stroke="#4A3728" strokeWidth="3.4" strokeLinecap="round" />
+              </>
+            ) : (
+              <>
+                <circle cx="78" cy="108" r="11" fill="#4A3728" />
+                <circle cx="81.5" cy="104.5" r="3.4" fill="#ffffff" />
+                <circle cx="76" cy="112" r="1.4" fill="#ffffff" opacity="0.8" />
+                <circle cx="122" cy="108" r="11" fill="#4A3728" />
+                <circle cx="125.5" cy="104.5" r="3.4" fill="#ffffff" />
+                <circle cx="120" cy="112" r="1.4" fill="#ffffff" opacity="0.8" />
+              </>
+            )}
+            <ellipse cx="65" cy="127" rx="11" ry="7" fill="#FF9A8B" opacity="0.6" />
+            <ellipse cx="135" cy="127" rx="11" ry="7" fill="#FF9A8B" opacity="0.6" />
             <path
               d={theme.mouthPath}
               fill="none"

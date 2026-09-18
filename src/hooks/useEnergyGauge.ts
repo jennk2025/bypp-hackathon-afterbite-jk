@@ -10,8 +10,11 @@ export function useEnergyGauge(snacks: Snack[], completedWorkouts: CompletedWork
   );
   const currentEnergyKcal = Math.max(0, totalEatenKcal - totalBurnedMidKcal);
   // 간식 한두 개만 기록해도 게이지가 금방 꽉 차 보이지 않도록 기준선을 넉넉하게 잡습니다.
-  const referenceMax = Math.max(1500, currentEnergyKcal * 1.6);
-  const fillPercent = referenceMax > 0 ? (currentEnergyKcal / referenceMax) * 100 : 0;
+  // 예전엔 이 기준선이 currentEnergyKcal에 비례해서 같이 커지는 바람에(currentEnergyKcal * 1.6)
+  // 퍼센트가 항상 1/1.6 ≈ 62.5%에 수렴해버려 아무리 많이 먹어도 주황 구간을 못 벗어났습니다.
+  // 기준선은 고정값으로 둬야 실제로 0~100% 전 구간을 오갈 수 있습니다.
+  const referenceMax = 1500;
+  const fillPercent = (currentEnergyKcal / referenceMax) * 100;
 
   return { currentEnergyKcal, fillPercent };
 }
