@@ -85,7 +85,7 @@ export async function runAnalyzeSnack(rawBody: any): Promise<ApiResult> {
         continue;
       }
 
-      const data = await geminiRes.json();
+      const data = (await geminiRes.json()) as any;
       let text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
       if (!text) {
         console.warn(`[analyze-snack] Model ${model} returned no text`);
