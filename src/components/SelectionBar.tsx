@@ -13,7 +13,7 @@ export function SelectionBar({ selectedCount, totalCalories, onConvert }: Select
         visible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0'
       }`}
     >
-      <div className="flex w-full max-w-md items-center justify-between gap-4 rounded-2xl border border-navy/10 bg-white/95 px-5 py-3.5 shadow-[0_8px_30px_rgba(31,42,60,0.12)] backdrop-blur">
+      <div className="flex w-full max-w-md items-center justify-between gap-4 rounded-2xl border border-white/10 bg-ivory-card/95 px-5 py-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.45)] backdrop-blur">
         <div>
           <p className="text-xs text-navy-soft">{selectedCount}개 선택됨</p>
           <p className="text-lg font-bold text-charcoal">

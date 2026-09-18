@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { WaveVisualization } from './components/WaveVisualization';
+import { WaveVisualization, type RunnerCharacter } from './components/WaveVisualization';
 import { SnackCard } from './components/SnackCard';
 import { SelectionBar } from './components/SelectionBar';
 import { AddSnackModal, type SnackFormInput } from './components/AddSnackModal';
@@ -27,6 +27,17 @@ export default function App() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [routines, setRoutines] = useState<ExerciseRoutine[]>([]);
   const [justCompletedId, setJustCompletedId] = useState<string | null>(null);
+  const [character, setCharacter] = useState<RunnerCharacter>(
+    () => (localStorage.getItem('afterbite_character') as RunnerCharacter) || 'male'
+  );
+
+  function toggleCharacter() {
+    setCharacter((prev) => {
+      const next = prev === 'male' ? 'female' : 'male';
+      localStorage.setItem('afterbite_character', next);
+      return next;
+    });
+  }
 
   useEffect(() => {
     saveState(state);
@@ -245,6 +256,7 @@ export default function App() {
     return (
       <>
         <div className="bg-decor" aria-hidden="true" />
+        <div className="bg-decor-spot" aria-hidden="true" />
         <MoveConditionForm
           totalCalories={selectedTotalCalories}
           snackCount={selectedIds.size}
@@ -259,6 +271,7 @@ export default function App() {
     return (
       <>
         <div className="bg-decor" aria-hidden="true" />
+        <div className="bg-decor-spot" aria-hidden="true" />
         <RoutineSuggestions routines={routines} onBack={() => setScreen('tray')} onSelect={handleRoutineSelect} />
       </>
     );
@@ -268,6 +281,7 @@ export default function App() {
     return (
       <>
         <div className="bg-decor" aria-hidden="true" />
+        <div className="bg-decor-spot" aria-hidden="true" />
         <WorkoutTimer
           routine={inProgress.routine}
           elapsedSeconds={inProgress.elapsedSeconds}
@@ -297,6 +311,8 @@ export default function App() {
         fillPercent={fillPercent}
         snackCount={state.snacks.length}
         completedWorkoutCount={state.completedWorkouts.length}
+        character={character}
+        onToggleCharacter={toggleCharacter}
       />
 
       {inProgress && (

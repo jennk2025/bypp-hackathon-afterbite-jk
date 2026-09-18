@@ -92,7 +92,7 @@ export function SnackCard({ snack, selected, selectable, onToggleSelect, onEdit,
                 type="button"
                 onClick={() => onDelete(snack.id)}
                 aria-label="삭제"
-                className="rounded-full p-2 text-navy-soft transition-colors hover:bg-red-50 hover:text-red-500"
+                className="rounded-full p-2 text-navy-soft transition-colors hover:bg-red-500/10 hover:text-red-400"
               >
                 <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none">
                   <path

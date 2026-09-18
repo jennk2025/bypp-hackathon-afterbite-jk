@@ -99,7 +99,7 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-navy/40 backdrop-blur-sm sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4">
       <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-ivory shadow-2xl sm:rounded-3xl">
         <div className="flex items-center justify-between border-b border-navy/10 px-5 py-4">
           <h2 className="text-base font-bold text-charcoal">
@@ -123,7 +123,7 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-3 rounded-2xl border border-navy/10 bg-white px-4 py-4 text-left shadow-sm transition-transform active:scale-[0.98]"
+                className="flex items-center gap-3 rounded-2xl border border-navy/10 bg-ivory-card px-4 py-4 text-left shadow-sm transition-transform active:scale-[0.98]"
               >
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lavender to-aqua text-lg shadow-sm">
                   📷
@@ -153,7 +153,7 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                   setSource('manual');
                   setStep('form');
                 }}
-                className="flex items-center gap-3 rounded-2xl border border-navy/10 bg-white px-4 py-4 text-left shadow-sm transition-transform active:scale-[0.98]"
+                className="flex items-center gap-3 rounded-2xl border border-navy/10 bg-ivory-card px-4 py-4 text-left shadow-sm transition-transform active:scale-[0.98]"
               >
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal to-aqua text-lg shadow-sm">
                   ✍️
@@ -206,10 +206,10 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                   onFocus={() => setShowSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
                   placeholder="예: 새우깡"
-                  className="w-full rounded-xl border border-navy/15 bg-white px-3.5 py-2.5 text-sm text-charcoal outline-none focus:border-teal"
+                  className="w-full rounded-xl border border-navy/15 bg-ivory-card px-3.5 py-2.5 text-sm text-charcoal outline-none focus:border-teal"
                 />
                 {showSuggestions && suggestions.length > 0 && (
-                  <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-navy/10 bg-white shadow-lg">
+                  <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-navy/10 bg-ivory-card shadow-lg">
                     {suggestions.map((entry) => (
                       <li key={entry.name}>
                         <button
@@ -245,7 +245,7 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                     onChange={(e) => setCalories(e.target.value.replace(/[^0-9.]/g, ''))}
                     inputMode="decimal"
                     placeholder="예: 458"
-                    className="w-full rounded-xl border border-navy/15 bg-white px-3.5 py-2.5 text-sm text-charcoal outline-none focus:border-teal"
+                    className="w-full rounded-xl border border-navy/15 bg-ivory-card px-3.5 py-2.5 text-sm text-charcoal outline-none focus:border-teal"
                   />
                 </div>
                 <div>
@@ -254,7 +254,7 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                     value={servingSizeLabel}
                     onChange={(e) => setServingSizeLabel(e.target.value)}
                     placeholder="예: 1봉지(90g)"
-                    className="w-full rounded-xl border border-navy/15 bg-white px-3.5 py-2.5 text-sm text-charcoal outline-none focus:border-teal"
+                    className="w-full rounded-xl border border-navy/15 bg-ivory-card px-3.5 py-2.5 text-sm text-charcoal outline-none focus:border-teal"
                   />
                 </div>
               </div>
@@ -279,7 +279,7 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                       className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
                         !useCustomMultiplier && multiplier === preset.multiplier
                           ? 'border-teal bg-teal/15 text-teal'
-                          : 'border-navy/15 bg-white text-navy-soft'
+                          : 'border-navy/15 bg-ivory-card text-navy-soft'
                       }`}
                     >
                       {preset.label}
@@ -289,7 +289,7 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                     type="button"
                     onClick={() => setUseCustomMultiplier(true)}
                     className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
-                      useCustomMultiplier ? 'border-teal bg-teal/15 text-teal' : 'border-navy/15 bg-white text-navy-soft'
+                      useCustomMultiplier ? 'border-teal bg-teal/15 text-teal' : 'border-navy/15 bg-ivory-card text-navy-soft'
                     }`}
                   >
                     직접 입력
@@ -302,14 +302,14 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                       onChange={(e) => setCustomMultiplier(e.target.value.replace(/[^0-9.]/g, ''))}
                       inputMode="decimal"
                       placeholder="예: 1.5"
-                      className="w-28 rounded-xl border border-navy/15 bg-white px-3.5 py-2 text-sm outline-none focus:border-teal"
+                      className="w-28 rounded-xl border border-navy/15 bg-ivory-card px-3.5 py-2 text-sm outline-none focus:border-teal"
                     />
                     <span className="text-sm text-navy-soft">배</span>
                   </div>
                 )}
               </div>
 
-              <div className="rounded-2xl bg-white px-4 py-3.5 shadow-sm">
+              <div className="rounded-2xl bg-ivory-card px-4 py-3.5 shadow-sm">
                 <p className="text-xs text-navy-soft">총 섭취 칼로리</p>
                 <p className="text-2xl font-bold text-charcoal">
                   {Math.round(totalCalories)} <span className="text-sm font-semibold text-navy-soft">kcal</span>

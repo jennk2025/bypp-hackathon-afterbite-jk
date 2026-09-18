@@ -43,7 +43,7 @@ function OptionGroup<T extends string>({
             className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
               value === opt.value
                 ? 'border-teal bg-teal/15 text-teal'
-                : 'border-navy/15 bg-white text-navy-soft'
+                : 'border-navy/15 bg-ivory-card text-navy-soft'
             }`}
           >
             {opt.label}
@@ -81,7 +81,7 @@ export function MoveConditionForm({ totalCalories, snackCount, onBack, onSubmit 
         <h2 className="text-base font-bold text-charcoal">지금 상황에 맞는 움직임 찾기</h2>
       </div>
 
-      <div className="mb-6 rounded-2xl bg-white px-4 py-3.5 shadow-sm">
+      <div className="mb-6 rounded-2xl bg-ivory-card px-4 py-3.5 shadow-sm">
         <p className="text-xs text-navy-soft">선택한 간식 {snackCount}개 · 총합</p>
         <p className="text-2xl font-bold text-charcoal">
           {Math.round(totalCalories)} <span className="text-sm font-semibold text-navy-soft">kcal</span>
@@ -103,7 +103,7 @@ export function MoveConditionForm({ totalCalories, snackCount, onBack, onSubmit 
                 className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
                   !useCustomMinutes && minutes === m
                     ? 'border-teal bg-teal/15 text-teal'
-                    : 'border-navy/15 bg-white text-navy-soft'
+                    : 'border-navy/15 bg-ivory-card text-navy-soft'
                 }`}
               >
                 {m}분{m === 20 ? '+' : ''}
@@ -113,7 +113,7 @@ export function MoveConditionForm({ totalCalories, snackCount, onBack, onSubmit 
               type="button"
               onClick={() => setUseCustomMinutes(true)}
               className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                useCustomMinutes ? 'border-teal bg-teal/15 text-teal' : 'border-navy/15 bg-white text-navy-soft'
+                useCustomMinutes ? 'border-teal bg-teal/15 text-teal' : 'border-navy/15 bg-ivory-card text-navy-soft'
               }`}
             >
               직접 입력
@@ -126,7 +126,7 @@ export function MoveConditionForm({ totalCalories, snackCount, onBack, onSubmit 
                 onChange={(e) => setCustomMinutes(e.target.value.replace(/[^0-9]/g, ''))}
                 inputMode="numeric"
                 placeholder="예: 3"
-                className="w-24 rounded-xl border border-navy/15 bg-white px-3.5 py-2 text-sm outline-none focus:border-teal"
+                className="w-24 rounded-xl border border-navy/15 bg-ivory-card px-3.5 py-2 text-sm outline-none focus:border-teal"
               />
               <span className="text-sm text-navy-soft">분</span>
             </div>
@@ -143,7 +143,7 @@ export function MoveConditionForm({ totalCalories, snackCount, onBack, onSubmit 
               type="button"
               onClick={() => setNoiseOk(true)}
               className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                noiseOk ? 'border-teal bg-teal/15 text-teal' : 'border-navy/15 bg-white text-navy-soft'
+                noiseOk ? 'border-teal bg-teal/15 text-teal' : 'border-navy/15 bg-ivory-card text-navy-soft'
               }`}
             >
               괜찮아요
@@ -152,7 +152,7 @@ export function MoveConditionForm({ totalCalories, snackCount, onBack, onSubmit 
               type="button"
               onClick={() => setNoiseOk(false)}
               className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                !noiseOk ? 'border-teal bg-teal/15 text-teal' : 'border-navy/15 bg-white text-navy-soft'
+                !noiseOk ? 'border-teal bg-teal/15 text-teal' : 'border-navy/15 bg-ivory-card text-navy-soft'
               }`}
             >
               조용해야 해요
@@ -167,7 +167,7 @@ export function MoveConditionForm({ totalCalories, snackCount, onBack, onSubmit 
               type="button"
               onClick={() => setJumpOk(true)}
               className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                jumpOk ? 'border-teal bg-teal/15 text-teal' : 'border-navy/15 bg-white text-navy-soft'
+                jumpOk ? 'border-teal bg-teal/15 text-teal' : 'border-navy/15 bg-ivory-card text-navy-soft'
               }`}
             >
               괜찮아요
@@ -176,7 +176,7 @@ export function MoveConditionForm({ totalCalories, snackCount, onBack, onSubmit 
               type="button"
               onClick={() => setJumpOk(false)}
               className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                !jumpOk ? 'border-teal bg-teal/15 text-teal' : 'border-navy/15 bg-white text-navy-soft'
+                !jumpOk ? 'border-teal bg-teal/15 text-teal' : 'border-navy/15 bg-ivory-card text-navy-soft'
               }`}
             >
               어려워요

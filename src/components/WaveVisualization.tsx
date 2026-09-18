@@ -1,17 +1,29 @@
-import runnerSilhouette from '../assets/runner-silhouette.jpg';
+import runnerMale from '../assets/runner-male.jpg';
+import runnerFemale from '../assets/runner-female.jpg';
+
+export type RunnerCharacter = 'male' | 'female';
 
 interface WaveVisualizationProps {
   currentEnergyKcal: number;
   fillPercent: number;
   snackCount: number;
   completedWorkoutCount: number;
+  character: RunnerCharacter;
+  onToggleCharacter: () => void;
 }
+
+const RUNNER_IMAGE: Record<RunnerCharacter, string> = {
+  male: runnerMale,
+  female: runnerFemale,
+};
 
 export function WaveVisualization({
   currentEnergyKcal,
   fillPercent,
   snackCount,
   completedWorkoutCount,
+  character,
+  onToggleCharacter,
 }: WaveVisualizationProps) {
   const clamped = Math.max(0, Math.min(100, fillPercent));
 
@@ -19,30 +31,54 @@ export function WaveVisualization({
     <div className="flex flex-col items-center gap-4">
       <svg width="0" height="0" className="absolute" aria-hidden="true">
         <defs>
-          {/* 실루엣 이미지는 흰 배경 위 검은 형태라 마스크로 쓰려면 명암을 뒤집어야 함
-              (마스크는 밝은 부분 = 보임, 어두운 부분 = 가려짐) */}
-          <filter id="afterbite-invert" colorInterpolationFilters="sRGB">
+          {/* 실루엣 원본 배경이 흰색이든 체크무늬(투명 미리보기)든 밝기만으로
+              보이는 부분을 가르도록 흑백 변환 + 임계값 처리 — 배경이 얼룩덜룩해도
+              루미넌스 마스크가 안정적으로 동작함 */}
+          <filter id="afterbite-silhouette-filter" colorInterpolationFilters="sRGB">
             <feColorMatrix
               type="matrix"
-              values="-1 0 0 0 1  0 -1 0 0 1  0 0 -1 0 1  0 0 0 1 0"
+              values="0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0 0 0 1 0"
             />
+            <feComponentTransfer>
+              <feFuncR type="discrete" tableValues="1 1 1 1 1 0 0 0 0 0" />
+              <feFuncG type="discrete" tableValues="1 1 1 1 1 0 0 0 0 0" />
+              <feFuncB type="discrete" tableValues="1 1 1 1 1 0 0 0 0 0" />
+            </feComponentTransfer>
           </filter>
           <mask id="afterbite-runner-mask" maskContentUnits="objectBoundingBox">
             <image
-              href={runnerSilhouette}
+              href={RUNNER_IMAGE[character]}
               x="0"
               y="0"
               width="1"
               height="1"
               preserveAspectRatio="xMidYMax meet"
-              filter="url(#afterbite-invert)"
+              filter="url(#afterbite-silhouette-filter)"
             />
           </mask>
         </defs>
       </svg>
 
+      <button
+        type="button"
+        onClick={onToggleCharacter}
+        data-on={character === 'female'}
+        aria-label={character === 'male' ? '여성 캐릭터로 전환' : '남성 캐릭터로 전환'}
+        className="gender-switch"
+      >
+        <span className="gender-switch-icon" aria-hidden="true">
+          🏃
+        </span>
+        <span className="gender-switch-icon" aria-hidden="true">
+          🏃‍♀️
+        </span>
+        <span className="gender-switch-thumb" aria-hidden="true">
+          {character === 'male' ? '🏃' : '🏃‍♀️'}
+        </span>
+      </button>
+
       <div
-        className="wave-glow relative mx-auto h-56 w-52 bg-white sm:h-64 sm:w-60"
+        className="wave-glow relative mx-auto h-56 w-52 bg-white/12 sm:h-64 sm:w-60"
         style={{
           maskImage: 'url(#afterbite-runner-mask)',
           WebkitMaskImage: 'url(#afterbite-runner-mask)',

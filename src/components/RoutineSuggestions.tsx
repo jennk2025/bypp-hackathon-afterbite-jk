@@ -30,7 +30,7 @@ export function RoutineSuggestions({ routines, onBack, onSelect }: RoutineSugges
 
       <div className="flex flex-col gap-3.5">
         {routines.map((routine) => (
-          <div key={routine.id} className="rounded-2xl border border-navy/10 bg-white px-4 py-4 shadow-sm">
+          <div key={routine.id} className="rounded-2xl border border-navy/10 bg-ivory-card px-4 py-4 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-[15px] font-bold text-charcoal">{routine.name}</h3>

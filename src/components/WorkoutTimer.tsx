@@ -40,7 +40,7 @@ export function WorkoutTimer({
 
       <div className="my-8 flex flex-col items-center">
         <div
-          className={`flex h-48 w-48 items-center justify-center rounded-full bg-white shadow-inner ring-4 sm:h-56 sm:w-56 ${
+          className={`flex h-48 w-48 items-center justify-center rounded-full bg-ivory-card shadow-inner ring-4 sm:h-56 sm:w-56 ${
             isRunning ? 'ring-teal/30' : 'ring-navy/10'
           }`}
         >
@@ -81,7 +81,7 @@ export function WorkoutTimer({
         <button
           type="button"
           onClick={onPauseResume}
-          className="w-full rounded-2xl border border-navy/15 bg-white py-3.5 text-sm font-semibold text-charcoal transition-transform active:scale-[0.98]"
+          className="w-full rounded-2xl border border-navy/15 bg-ivory-card py-3.5 text-sm font-semibold text-charcoal transition-transform active:scale-[0.98]"
         >
           {isRunning ? '일시정지' : '다시 시작'}
         </button>
