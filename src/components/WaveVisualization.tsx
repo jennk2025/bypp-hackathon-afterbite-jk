@@ -75,25 +75,29 @@ function polar(angleDeg: number, radius: number) {
 }
 
 // duration을 제각각 다르게 둬서 8개가 같은 박자로 동시에 까딱이지 않고(=우글거려 보이지
-// 않고) 서로 다른 느긋한 리듬으로 떠 있게 합니다.
+// 않고) 서로 다른 느긋한 리듬으로 떠 있게 합니다. delay는 음수를 씁니다 — 무한 반복
+// 애니메이션에 양수 delay를 주면 처음 로드될 때 그 시간만큼 가만히 있다가 하나씩
+// "팝" 하고 튀어나오면서 시작해, 딱딱거리며 순서대로 번지는 것처럼 보였습니다. 음수
+// delay는 "이미 그만큼 재생된 상태"로 즉시 시작하므로 팝인 없이 처음부터 자연스럽게
+// 서로 다른 위상으로 움직입니다.
 const STICKERS: { emoji: string; angle: number; radius: number; size: string; bg: string; delay: string; duration: string }[] = [
   // 오른쪽, 위→아래 지그재그
   { emoji: '🍩', angle: 40, radius: 60, size: 'text-2xl', bg: 'bg-[#FFD9C7]', delay: '0s', duration: '4.6s' },
-  { emoji: '🍕', angle: 75, radius: 66, size: 'text-lg', bg: 'bg-[#FFD1A8]', delay: '1.1s', duration: '5.4s' },
-  { emoji: '🍔', angle: 105, radius: 66, size: 'text-lg', bg: 'bg-[#F7D9A8]', delay: '1.3s', duration: '4.1s' },
-  { emoji: '🍪', angle: 140, radius: 60, size: 'text-2xl', bg: 'bg-[#CFE8FF]', delay: '1.5s', duration: '5.8s' },
+  { emoji: '🍕', angle: 75, radius: 66, size: 'text-lg', bg: 'bg-[#FFD1A8]', delay: '-1.1s', duration: '5.4s' },
+  { emoji: '🍔', angle: 105, radius: 66, size: 'text-lg', bg: 'bg-[#F7D9A8]', delay: '-1.3s', duration: '4.1s' },
+  { emoji: '🍪', angle: 140, radius: 60, size: 'text-2xl', bg: 'bg-[#CFE8FF]', delay: '-1.5s', duration: '5.8s' },
   // 왼쪽, 위→아래 지그재그 (오른쪽과 짝을 이루는 대칭 리듬)
-  { emoji: '🍗', angle: -40, radius: 60, size: 'text-xl', bg: 'bg-[#FFDDB8]', delay: '0.7s', duration: '5.1s' },
-  { emoji: '🍭', angle: -75, radius: 66, size: 'text-lg', bg: 'bg-[#E6DBFF]', delay: '0.5s', duration: '4.3s' },
-  { emoji: '🧁', angle: -105, radius: 66, size: 'text-lg', bg: 'bg-[#C8F4E0]', delay: '1s', duration: '5.6s' },
-  { emoji: '🍰', angle: -140, radius: 60, size: 'text-lg', bg: 'bg-[#FFE3D3]', delay: '0.9s', duration: '4.8s' },
+  { emoji: '🍗', angle: -40, radius: 60, size: 'text-xl', bg: 'bg-[#FFDDB8]', delay: '-0.7s', duration: '5.1s' },
+  { emoji: '🍭', angle: -75, radius: 66, size: 'text-lg', bg: 'bg-[#E6DBFF]', delay: '-0.5s', duration: '4.3s' },
+  { emoji: '🧁', angle: -105, radius: 66, size: 'text-lg', bg: 'bg-[#C8F4E0]', delay: '-1s', duration: '5.6s' },
+  { emoji: '🍰', angle: -140, radius: 60, size: 'text-lg', bg: 'bg-[#FFE3D3]', delay: '-0.9s', duration: '4.8s' },
 ];
 
 const SPARKLES: { angle: number; radius: number; size: number; color: string; delay: string }[] = [
-  { angle: 58, radius: 56, size: 12, color: '#C9B6FF', delay: '0.6s' },
-  { angle: 122, radius: 56, size: 11, color: '#34D399', delay: '1.4s' },
-  { angle: -122, radius: 56, size: 12, color: '#FF9A76', delay: '0.9s' },
-  { angle: -58, radius: 56, size: 11, color: '#7DD3FC', delay: '1.8s' },
+  { angle: 58, radius: 56, size: 12, color: '#C9B6FF', delay: '-0.6s' },
+  { angle: 122, radius: 56, size: 11, color: '#34D399', delay: '-1.4s' },
+  { angle: -122, radius: 56, size: 12, color: '#FF9A76', delay: '-0.9s' },
+  { angle: -58, radius: 56, size: 11, color: '#7DD3FC', delay: '-1.8s' },
 ];
 
 // 캐릭터 몸통은 svg 좌표계 y=50~190(높이 140) 사각형입니다. percent가 클수록(=아직
