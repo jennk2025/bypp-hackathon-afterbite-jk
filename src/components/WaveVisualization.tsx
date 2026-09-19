@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { stageOf, STAGE_COPY, type Stage } from '../lib/energyStage';
+import { stageOf, labelFor, type Stage } from '../lib/energyStage';
 
 interface WaveVisualizationProps {
   currentEnergyKcal: number;
@@ -46,10 +46,13 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
-function getDynamicTheme(percent: number): FillTheme {
-  const p = Math.max(0, Math.min(100, percent));
+// rawPercent는 clamp되기 전 값입니다 — 100%(REFERENCE_MAX_KCAL)를 실제로 넘었는지는
+// 그 값으로만 알 수 있어서, 색/표정은 clamp된 p로 정하되 문구는 labelFor(rawPercent)로
+// 따로 정합니다.
+function getDynamicTheme(rawPercent: number): FillTheme {
+  const p = Math.max(0, Math.min(100, rawPercent));
   const stage = stageOf(p);
-  const copy = STAGE_COPY[stage];
+  const copy = labelFor(rawPercent);
   const colors = STAGE_COLORS[stage];
 
   return {
@@ -131,7 +134,7 @@ export function WaveVisualization({
   justCompletedId,
 }: WaveVisualizationProps) {
   const clamped = Math.max(0, Math.min(100, fillPercent));
-  const theme = getDynamicTheme(clamped);
+  const theme = getDynamicTheme(fillPercent);
   const waveY = waveYFor(clamped);
   const haloStyle = {
     '--halo-color': theme.halo,

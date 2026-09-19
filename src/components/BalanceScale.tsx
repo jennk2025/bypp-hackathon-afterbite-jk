@@ -1,4 +1,4 @@
-import { stageOf, STAGE_COPY, STAGE_KCAL_RANGE, REFERENCE_MAX_KCAL, type Stage } from '../lib/energyStage';
+import { stageOf, labelFor, STAGE_KCAL_RANGE, REFERENCE_MAX_KCAL, type Stage } from '../lib/energyStage';
 
 interface BalanceScaleProps {
   percent: number;
@@ -14,7 +14,8 @@ const ZONE_COLOR: Record<Stage, string> = {
 export function BalanceScale({ percent }: BalanceScaleProps) {
   const clamped = Math.max(0, Math.min(100, percent));
   const stage = stageOf(clamped);
-  const copy = STAGE_COPY[stage];
+  // labelFor는 clamp 전의 percent를 받아야 100% 초과("아직 많이 남았어요")를 구분합니다.
+  const copy = labelFor(percent);
 
   return (
     <section className="mt-6 rounded-[22px] border border-navy/10 bg-ivory-card px-5 py-4 shadow-sm lg:mt-0 lg:rounded-[28px] lg:px-7 lg:py-6">
