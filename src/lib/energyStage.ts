@@ -24,14 +24,16 @@ export const STAGE_COPY: Record<Stage, { label: string; emoji: string }> = {
   heavy: { label: '많이 쌓였어요, 같이 움직여요', emoji: '🔥' },
 };
 
-// REFERENCE_MAX_KCAL(100%)를 실제로 넘어섰을 때만 쓰는 문구입니다. 막 빨간 구간에
-// 들어섰을 때("많이 쌓였어요")와 그보다 훨씬 더 쌓였을 때를 구분해서 보여줍니다.
+// REFERENCE_MAX_KCAL(100%)를 넘어선 뒤로도 범위가 넓어서(1400kcal 넘는 건 다 똑같이
+// 취급하면 심심하니), 얼마나 더 쌓였는지에 따라 문구를 한 단계 더 나눕니다.
 const OVERFLOW_COPY = { label: '아직 많이 남았어요', emoji: '🥵' };
+const EXTREME_OVERFLOW_COPY = { label: '정말 많이 쌓였어요! 꼭 움직여봐요', emoji: '🚨' };
 
 // 색상/표정(캐릭터, 게이지 막대의 진한 정도)은 clamp된 값 기준 stageOf를 그대로 쓰고,
 // 문구만 이 함수로 별도 계산합니다 — clamp 전의 원래 퍼센트를 받아야 100% 초과를
 // 구분할 수 있기 때문입니다.
 export function labelFor(rawPercent: number): { label: string; emoji: string } {
+  if (rawPercent > 150) return EXTREME_OVERFLOW_COPY;
   if (rawPercent > 100) return OVERFLOW_COPY;
   return STAGE_COPY[stageOf(rawPercent)];
 }
