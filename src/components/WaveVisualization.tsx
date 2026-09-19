@@ -123,7 +123,7 @@ const CELEBRATE_SPARKLES: { angle: number; distance: number; size: number; color
   { angle: 315, distance: 78, size: 11, color: '#4ADE80', delay: '20ms' },
 ];
 
-const CELEBRATE_MS = 750;
+const CELEBRATE_MS = 1050;
 
 export function WaveVisualization({
   currentEnergyKcal,
@@ -349,7 +349,9 @@ export function WaveVisualization({
         </span>
         <p className="mt-1 text-xs font-medium tracking-wide text-navy-soft lg:text-sm">누적 칼로리</p>
         <p className="font-display text-3xl text-charcoal sm:text-4xl lg:text-5xl">
-          {Math.round(currentEnergyKcal)}
+          <span className={celebrating ? 'celebrate-kcal-pop' : undefined}>
+            {Math.round(currentEnergyKcal)}
+          </span>
           <span className="ml-0.5 text-base font-semibold text-navy-soft lg:text-xl">kcal</span>
         </p>
       </div>

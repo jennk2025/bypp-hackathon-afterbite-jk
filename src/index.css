@@ -351,7 +351,7 @@ body {
 }
 
 .celebrate-bounce {
-  animation: celebrate-bounce 700ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: celebrate-bounce 1000ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes celebrate-spark {
@@ -359,7 +359,7 @@ body {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.3);
   }
-  35% {
+  30% {
     opacity: 1;
     transform: translate(calc(-50% + var(--spark-dx, 0px) * 0.6), calc(-50% + var(--spark-dy, 0px) * 0.6)) scale(1.1);
   }
@@ -370,5 +370,26 @@ body {
 }
 
 .celebrate-spark {
-  animation: celebrate-spark 650ms ease-out forwards;
+  animation: celebrate-spark 950ms ease-out forwards;
+}
+
+/* 운동 완료 시 kcal 숫자가 실제로 줄어드는 걸 강조하는 짧은 팝(확대+색상) 연출 */
+@keyframes celebrate-kcal-pop {
+  0% {
+    transform: scale(1);
+    color: inherit;
+  }
+  35% {
+    transform: scale(1.18);
+    color: var(--celebrate-kcal-color, #22c55e);
+  }
+  100% {
+    transform: scale(1);
+    color: inherit;
+  }
+}
+
+.celebrate-kcal-pop {
+  display: inline-block;
+  animation: celebrate-kcal-pop 1000ms ease-out;
 }
