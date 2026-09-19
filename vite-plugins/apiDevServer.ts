@@ -15,6 +15,7 @@ interface ApiResult {
 const ROUTES: Record<string, { modulePath: string; exportName: string }> = {
   '/api/analyze-snack': { modulePath: '/api/analyze-snack.ts', exportName: 'runAnalyzeSnack' },
   '/api/recommend-routine': { modulePath: '/api/recommend-routine.ts', exportName: 'runRecommendRoutine' },
+  '/api/lookup-snack': { modulePath: '/api/lookup-snack.ts', exportName: 'runLookupSnack' },
 };
 
 function readJsonBody(req: IncomingMessage): Promise<unknown> {

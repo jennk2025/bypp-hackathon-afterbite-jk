@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { SNACK_DB } from '../data/snackDatabase';
 import { analyzeSnackPhoto } from '../lib/snackVision';
+import { lookupSnackByName } from '../lib/snackLookup';
 import { buildPortionPresets } from '../lib/portion';
+import { isLikelyPhone } from '../lib/device';
+import { CameraCapture } from './CameraCapture';
 import type { Snack, SnackSource } from '../types';
 
 export interface SnackFormInput {
@@ -20,7 +23,7 @@ interface AddSnackModalProps {
   onSave: (input: SnackFormInput) => void;
 }
 
-type Step = 'choose' | 'photo' | 'form';
+type Step = 'choose' | 'camera' | 'photo' | 'form';
 
 export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackModalProps) {
   const [step, setStep] = useState<Step>(mode === 'edit' ? 'form' : 'choose');
@@ -38,6 +41,7 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [ocrNote, setOcrNote] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [lookupStatus, setLookupStatus] = useState<'idle' | 'loading' | 'not_found'>('idle');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -83,6 +87,21 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
     });
   }
 
+  async function handleLookupCalories() {
+    if (!name.trim()) return;
+    setLookupStatus('loading');
+    const result = await lookupSnackByName(name);
+    if (result.found) {
+      setName(result.name);
+      setCalories(String(result.caloriesPerServing));
+      if (result.servingSizeLabel) setServingSizeLabel(result.servingSizeLabel);
+      setSource('search');
+      setLookupStatus('idle');
+    } else {
+      setLookupStatus('not_found');
+    }
+  }
+
   function handleSubmit() {
     if (!name.trim() || totalCalories <= 0) return;
     const portionLabel = useCustomMultiplier
@@ -121,10 +140,17 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
         <div className="flex-1 overflow-y-auto px-5 py-5">
           {step === 'choose' && (
             <div className="flex flex-col gap-3">
-              {/* 스마트폰 고화질 카메라 촬영 (네이티브) */}
+              {/* 카메라로 촬영 — 폰에서는 네이티브 카메라 앱(고화질)을 바로 열고,
+                  노트북·아이패드처럼 그게 안 먹히는 기기에서는 실시간 촬영 화면으로 대체합니다. */}
               <button
                 type="button"
-                onClick={() => cameraInputRef.current?.click()}
+                onClick={() => {
+                  if (isLikelyPhone()) {
+                    cameraInputRef.current?.click();
+                  } else {
+                    setStep('camera');
+                  }
+                }}
                 className="flex items-center gap-3 rounded-2xl border-2 border-teal/40 bg-ivory-card px-4 py-4 text-left shadow-sm transition-transform active:scale-[0.98]"
               >
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-aqua to-teal text-lg shadow-sm">
@@ -132,13 +158,13 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                 </span>
                 <span>
                   <span className="flex items-center gap-1.5 text-sm font-bold text-charcoal">
-                    스마트폰 카메라로 촬영
+                    카메라로 촬영
                     <span className="rounded-full bg-teal/15 px-1.5 py-0.5 text-[10px] font-semibold text-teal">
                       고화질 추천
                     </span>
                   </span>
                   <span className="block text-xs text-navy-soft">
-                    스마트폰 카메라 앱으로 선명하게 찍어 AI가 자동 분석해요
+                    선명하게 찍으면 AI가 자동으로 분석해요
                   </span>
                 </span>
               </button>
@@ -205,6 +231,14 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
             </div>
           )}
 
+          {step === 'camera' && (
+            <CameraCapture
+              onCapture={handleFileSelected}
+              onCancel={() => setStep('choose')}
+              onUnavailable={() => cameraInputRef.current?.click()}
+            />
+          )}
+
           {step === 'photo' && (
             <div className="flex flex-col items-center gap-4 py-6">
               {previewUrl && (
@@ -239,6 +273,7 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                   onChange={(e) => {
                     setName(e.target.value);
                     setShowSuggestions(true);
+                    setLookupStatus('idle');
                   }}
                   onFocus={() => setShowSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
@@ -295,6 +330,32 @@ export function AddSnackModal({ mode, initialSnack, onClose, onSave }: AddSnackM
                   />
                 </div>
               </div>
+
+              {/* 이름은 입력했는데 칼로리를 모를 때 — 대중적으로 잘 알려진 음식/메뉴면
+                  Gemini가 자동으로 채워주고, 애매하면 모른다고 답해서 직접 입력을 유도합니다. */}
+              {name.trim() && !calories && (
+                <div>
+                  {lookupStatus === 'loading' ? (
+                    <p className="flex items-center gap-2 text-xs text-navy-soft">
+                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-teal border-t-transparent" />
+                      칼로리 찾는 중...
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleLookupCalories}
+                      className="rounded-full border border-teal/40 bg-teal/10 px-3.5 py-1.5 text-xs font-semibold text-teal transition-colors hover:bg-teal/20"
+                    >
+                      ✨ AI로 칼로리 찾기
+                    </button>
+                  )}
+                  {lookupStatus === 'not_found' && (
+                    <p className="mt-1.5 text-[11px] text-navy-soft">
+                      잘 알려진 음식이 아니라 자동으로 못 찾았어요. 아래에 직접 입력해주세요.
+                    </p>
+                  )}
+                </div>
+              )}
 
               <p className="text-[11px] text-navy-soft">
                 인식·검색된 정보는 틀릴 수 있어요. 실제 포장지 정보와 다르면 위 값을 직접 고쳐주세요.
