@@ -74,17 +74,19 @@ function polar(angleDeg: number, radius: number) {
   return { top: `${50 - radius * Math.cos(rad)}%`, left: `${50 + radius * Math.sin(rad)}%` };
 }
 
-const STICKERS: { emoji: string; angle: number; radius: number; size: string; bg: string; delay: string }[] = [
+// duration을 제각각 다르게 둬서 8개가 같은 박자로 동시에 까딱이지 않고(=우글거려 보이지
+// 않고) 서로 다른 느긋한 리듬으로 떠 있게 합니다.
+const STICKERS: { emoji: string; angle: number; radius: number; size: string; bg: string; delay: string; duration: string }[] = [
   // 오른쪽, 위→아래 지그재그
-  { emoji: '🍩', angle: 40, radius: 60, size: 'text-2xl', bg: 'bg-[#FFD9C7]', delay: '0s' },
-  { emoji: '🍕', angle: 75, radius: 66, size: 'text-lg', bg: 'bg-[#FFD1A8]', delay: '1.1s' },
-  { emoji: '🍔', angle: 105, radius: 66, size: 'text-lg', bg: 'bg-[#F7D9A8]', delay: '1.3s' },
-  { emoji: '🍪', angle: 140, radius: 60, size: 'text-2xl', bg: 'bg-[#CFE8FF]', delay: '1.5s' },
+  { emoji: '🍩', angle: 40, radius: 60, size: 'text-2xl', bg: 'bg-[#FFD9C7]', delay: '0s', duration: '4.6s' },
+  { emoji: '🍕', angle: 75, radius: 66, size: 'text-lg', bg: 'bg-[#FFD1A8]', delay: '1.1s', duration: '5.4s' },
+  { emoji: '🍔', angle: 105, radius: 66, size: 'text-lg', bg: 'bg-[#F7D9A8]', delay: '1.3s', duration: '4.1s' },
+  { emoji: '🍪', angle: 140, radius: 60, size: 'text-2xl', bg: 'bg-[#CFE8FF]', delay: '1.5s', duration: '5.8s' },
   // 왼쪽, 위→아래 지그재그 (오른쪽과 짝을 이루는 대칭 리듬)
-  { emoji: '🍗', angle: -40, radius: 60, size: 'text-xl', bg: 'bg-[#FFDDB8]', delay: '0.7s' },
-  { emoji: '🍭', angle: -75, radius: 66, size: 'text-lg', bg: 'bg-[#E6DBFF]', delay: '0.5s' },
-  { emoji: '🧁', angle: -105, radius: 66, size: 'text-lg', bg: 'bg-[#C8F4E0]', delay: '1s' },
-  { emoji: '🍰', angle: -140, radius: 60, size: 'text-lg', bg: 'bg-[#FFE3D3]', delay: '0.9s' },
+  { emoji: '🍗', angle: -40, radius: 60, size: 'text-xl', bg: 'bg-[#FFDDB8]', delay: '0.7s', duration: '5.1s' },
+  { emoji: '🍭', angle: -75, radius: 66, size: 'text-lg', bg: 'bg-[#E6DBFF]', delay: '0.5s', duration: '4.3s' },
+  { emoji: '🧁', angle: -105, radius: 66, size: 'text-lg', bg: 'bg-[#C8F4E0]', delay: '1s', duration: '5.6s' },
+  { emoji: '🍰', angle: -140, radius: 60, size: 'text-lg', bg: 'bg-[#FFE3D3]', delay: '0.9s', duration: '4.8s' },
 ];
 
 const SPARKLES: { angle: number; radius: number; size: number; color: string; delay: string }[] = [
@@ -157,8 +159,8 @@ export function WaveVisualization({
             <span
               key={i}
               aria-hidden="true"
-              className={`float-sticker absolute flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full shadow-sm sm:h-11 sm:w-11 ${s.size} ${s.bg}`}
-              style={{ top: pos.top, left: pos.left, animationDelay: s.delay }}
+              className={`float-sticker absolute flex h-9 w-9 items-center justify-center rounded-full shadow-sm sm:h-11 sm:w-11 ${s.size} ${s.bg}`}
+              style={{ top: pos.top, left: pos.left, animationDelay: s.delay, animationDuration: s.duration }}
             >
               {s.emoji}
             </span>

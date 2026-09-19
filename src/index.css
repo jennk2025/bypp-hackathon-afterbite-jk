@@ -115,14 +115,18 @@ body {
   pointer-events: none;
 }
 
-/* 캐릭터 주위를 떠다니는 간식 스티커 + 반짝임 (순수 장식용, 데이터 없음) */
+/* 캐릭터 주위를 떠다니는 간식 스티커 + 반짝임 (순수 장식용, 데이터 없음).
+   회전을 넣었더니 다리 여러 개 달린 벌레가 꿈틀대는 것 같다는 평이 있어서 위아래로만
+   느긋하게 떠다니게 바꿨습니다. (translate(-50%,-50%)는 스티커를 중심점에 맞추는
+   정적 위치값인데, 애니메이션이 도는 동안 transform이 통째로 대체되니 여기서도
+   같이 넣어줘야 애니메이션 중에도 제자리에서 떠다닙니다.) */
 @keyframes float-bob {
   0%,
   100% {
-    transform: translateY(0) rotate(-3deg);
+    transform: translate(-50%, -50%) translateY(0);
   }
   50% {
-    transform: translateY(-9px) rotate(3deg);
+    transform: translate(-50%, -50%) translateY(-7px);
   }
 }
 
@@ -139,7 +143,7 @@ body {
 }
 
 .float-sticker {
-  animation: float-bob 3.2s ease-in-out infinite;
+  animation: float-bob 4.5s ease-in-out infinite;
 }
 
 .sparkle-icon {
