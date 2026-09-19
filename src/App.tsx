@@ -168,6 +168,7 @@ export default function App() {
             snackCount={state.snacks.length}
             completedWorkoutCount={state.completedWorkouts.length}
             onCompletedWorkoutsClick={() => setModal({ type: 'completedWorkouts' })}
+            justCompletedId={workout.justCompletedId}
           />
         </div>
 

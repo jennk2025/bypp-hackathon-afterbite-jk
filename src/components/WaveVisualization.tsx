@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { stageOf, STAGE_COPY, type Stage } from '../lib/energyStage';
 
 interface WaveVisualizationProps {
@@ -7,6 +7,9 @@ interface WaveVisualizationProps {
   snackCount: number;
   completedWorkoutCount: number;
   onCompletedWorkoutsClick: () => void;
+  // 방금 완료한 운동 기록의 id. 값이 "새로" 들어올 때(=운동을 막 완료했을 때)만
+  // 캐릭터가 한 번 통통 튀고 반짝임이 터지는 축하 연출을 재생합니다.
+  justCompletedId?: string | null;
 }
 
 interface FillTheme {
@@ -99,12 +102,27 @@ function waveYFor(percent: number) {
   return 190 - 1.4 * visual;
 }
 
+// 운동 완료 축하 연출: 캐릭터 중심에서 8방향으로 반짝임이 퍼져나갑니다.
+const CELEBRATE_SPARKLES: { angle: number; distance: number; size: number; color: string; delay: string }[] = [
+  { angle: 0, distance: 70, size: 14, color: '#FFC26B', delay: '0ms' },
+  { angle: 45, distance: 78, size: 11, color: '#7DD3FC', delay: '40ms' },
+  { angle: 90, distance: 70, size: 13, color: '#C9B6FF', delay: '80ms' },
+  { angle: 135, distance: 78, size: 11, color: '#4ADE80', delay: '30ms' },
+  { angle: 180, distance: 70, size: 14, color: '#FFC26B', delay: '70ms' },
+  { angle: 225, distance: 78, size: 11, color: '#7DD3FC', delay: '10ms' },
+  { angle: 270, distance: 70, size: 13, color: '#C9B6FF', delay: '60ms' },
+  { angle: 315, distance: 78, size: 11, color: '#4ADE80', delay: '20ms' },
+];
+
+const CELEBRATE_MS = 750;
+
 export function WaveVisualization({
   currentEnergyKcal,
   fillPercent,
   snackCount,
   completedWorkoutCount,
   onCompletedWorkoutsClick,
+  justCompletedId,
 }: WaveVisualizationProps) {
   const clamped = Math.max(0, Math.min(100, fillPercent));
   const theme = getDynamicTheme(clamped);
@@ -113,6 +131,21 @@ export function WaveVisualization({
     '--halo-color': theme.halo,
     '--halo-speed': `${theme.waveSeconds + 1.3}s`,
   } as CSSProperties;
+
+  const [celebrating, setCelebrating] = useState(false);
+  const lastCelebratedIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!justCompletedId) {
+      lastCelebratedIdRef.current = null;
+      return;
+    }
+    if (justCompletedId === lastCelebratedIdRef.current) return;
+    lastCelebratedIdRef.current = justCompletedId;
+    setCelebrating(true);
+    const timer = setTimeout(() => setCelebrating(false), CELEBRATE_MS);
+    return () => clearTimeout(timer);
+  }, [justCompletedId]);
 
   return (
     <div id="hero" className="flex scroll-mt-20 flex-col items-center gap-4">
@@ -150,10 +183,36 @@ export function WaveVisualization({
         })}
 
         <div
-          className="wave-halo mx-auto h-[clamp(260px,72vw,380px)] w-[clamp(240px,66vw,350px)] lg:h-[340px] lg:w-[310px] xl:h-[400px] xl:w-[360px] 2xl:h-[460px] 2xl:w-[420px]"
+          className={`wave-halo mx-auto h-[clamp(260px,72vw,380px)] w-[clamp(240px,66vw,350px)] lg:h-[340px] lg:w-[310px] xl:h-[400px] xl:w-[360px] 2xl:h-[460px] 2xl:w-[420px] ${
+            celebrating ? 'celebrate-bounce' : ''
+          }`}
           style={haloStyle}
         >
           <div className="wave-backdrop-glow" aria-hidden="true" />
+
+          {/* 운동 완료 축하 반짝임 — 원샷, 데이터 없음 */}
+          {celebrating && (
+            <div className="pointer-events-none absolute inset-0 z-10" aria-hidden="true">
+              {CELEBRATE_SPARKLES.map((s, i) => {
+                const rad = (s.angle * Math.PI) / 180;
+                const dx = `${Math.sin(rad) * s.distance}px`;
+                const dy = `${-Math.cos(rad) * s.distance}px`;
+                return (
+                  <svg
+                    key={i}
+                    className="celebrate-spark absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                    width={s.size}
+                    height={s.size}
+                    viewBox="0 0 20 20"
+                    fill={s.color}
+                    style={{ '--spark-dx': dx, '--spark-dy': dy, animationDelay: s.delay } as CSSProperties}
+                  >
+                    <path d="M10 0 12.2 7.8 20 10 12.2 12.2 10 20 7.8 12.2 0 10 7.8 7.8Z" />
+                  </svg>
+                );
+              })}
+            </div>
+          )}
 
           <svg viewBox="0 0 200 220" className="relative h-full w-full" role="img" aria-label="오늘의 에너지 친구">
             <defs>
